@@ -16,6 +16,7 @@ self.addEventListener('install', e => {
 // when the browser fetches a url, either response with
 // the cached object or go ahead and fetch the actual url
 self.addEventListener('fetch', event => {
+	console.log("fetcha", event);
 	event.respondWith(
 		caches.match(event.request).then(res => res || fetch(event.request))
 	);
