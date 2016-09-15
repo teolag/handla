@@ -1,0 +1,9 @@
+{
+	"name":"Handla inför kalaset",
+	"items":[
+		{"title":"Tårtbotten", "category":"Bröd"},
+		{"title":"Jordgubbar", "category":"Frukt & grönt"},
+		{"title":"Grädde", "category":"Mejeri"}
+	]
+
+}
