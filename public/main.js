@@ -68,7 +68,7 @@ function updateOnlineStatus(event) {
 
 function connectToWebsocket() {
 	ConnectionStatus.setConnecting();
-	Socker.connect("wss://localhost:55555", "handla", websocketConnected, websocketClosed, websocketError);	
+	Socker.connect(config.websocket.url, config.websocket.protocol, websocketConnected, websocketClosed, websocketError);	
 }
 function websocketConnected(e) {
 	console.log("connected to websocket", e);
