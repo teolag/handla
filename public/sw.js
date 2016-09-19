@@ -1,11 +1,12 @@
-const cacheName = 'v1::static';
+const cacheName = 'v1::stati4c6';
 
 const cachedFiles = [
 	'/',
-	'main.js',
+	'js/main.js',
 	'sockerClient.js',
-	'config.js',
-	'style.css'
+	'js/config.js',
+	'js/item_list.js',
+	'css/style.css'
 ];
 
 
@@ -29,7 +30,7 @@ self.addEventListener('fetch', event => {
 				console.log("get from cache", response.url);
 				return response;
 			}
-			console.log("get from server", response.url);
+			console.log("get from server", event.request.url);
 			return fetch(event.request);
 		})
 	);

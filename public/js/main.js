@@ -48,6 +48,21 @@ var ConnectionStatus = (function() {
 connectToWebsocket()
 
 
+
+
+var addItemForm = document.forms.addItem;
+addItemForm.addEventListener("submit", addItem, false);
+
+function addItem(e) {
+	e.preventDefault();
+	var newItem = e.target.elements.newItem;
+	console.log("add", newItem.value);
+	Socker.send("addItem", {name:newItem.value});
+}
+
+
+
+
 window.addEventListener('online',  updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 function updateOnlineStatus(event) {
@@ -68,7 +83,7 @@ function updateOnlineStatus(event) {
 
 function connectToWebsocket() {
 	ConnectionStatus.setConnecting();
-	Socker.connect(config.websocket.url, config.websocket.protocol, websocketConnected, websocketClosed, websocketError);	
+	Socker.connect(config.websocket.url, config.websocket.protocol, websocketConnected, websocketClosed, websocketError);
 }
 function websocketConnected(e) {
 	console.log("connected to websocket", e);

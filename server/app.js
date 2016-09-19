@@ -5,7 +5,7 @@ Kommer in på sidan
 	Är vi online
 		JA: hämta senaste listan från servern
 			kolla om vi har något osyncat i local storage
-		NEJ: 
+		NEJ:
 
 
 
@@ -32,6 +32,8 @@ var fs = require('fs'),
     app = express(),
     config = require('./config'),
     socker = require('../Socker/sockerServer.js'),
+	Datastore = require('nedb'),
+  	db = new Datastore({ filename: 'server/item_store', autoload: true }),
     options = {
 		cert: fs.readFileSync(config.cert),
 		key: fs.readFileSync(config.certKey)
@@ -46,16 +48,30 @@ var logger = function(req, res, next) {
     next(); // Passing the request to the next handler in the stack.
 }
 
-    app.use(logger); // Here you add your logger to the stack.
-
-
+app.use(logger); // Here you add your logger to the stack.
 app.use("/sockerClient.js", express.static(__dirname + '/../Socker/sockerClient.js'));
 app.use(express.static('public'));
 
 
-socker.init(server, config.websocket)
+socker.init(server, {
+	connectCallback: userConnected,
+	allowedOrigin: config.websocket.allowedOrigin,
+	allowedProtocol: config.websocket.allowedProtocol
+});
+
+socker.on("addItem", function(connection, data, type) {
+	console.log("adda!", data);
+	db.insert({name:data.name, added: new Date()});
+});
 
 
+
+
+function userConnected(con) {
+	db.find({}, function (err, docs) {
+		socker.sendTo(con, "allItems", docs);
+	});
+}
 
 function listenStart() {
 	console.log("listening on port " + config.port);

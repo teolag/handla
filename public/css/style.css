@@ -1,3 +1,15 @@
+body {
+	background-color: #d6d8c4;
+}
+
+button, input, select, textarea {
+	font: inherit;
+}
+
+
+
+
+
 
 .shopping-list-area {
 	overflow: auto;

@@ -3,8 +3,9 @@
 	<head>
 		<title>Handla</title>
 		<meta charset="utf-8" />
-		<link rel="stylesheet" href="style.css" type="text/css" />
+		<link rel="stylesheet" href="css/style.css" type="text/css" />
 		<meta name="viewport" content="width=device-width" />
+		<link rel="manifest" href="manifest.json">
 	</head>
 	<body>
 
@@ -13,27 +14,33 @@
 			<div class="connection-status"></div>
 		</header>
 
-		<form name="shopping-list" method="post" action="save.php">
 
-			<section class="shopping-list-area">
-				<ul class="shopping-list">
-					<li class="shopping-list-item">
-						<label>
-							<input type="checkbox" name="4235" />
-							Ost
-						</label>
-					</li>
-					<li class="shopping-list-item">
-						<label>
-							<input type="checkbox" name="343" />
-							Kanel
-						</label>
-					</li>
-				</ul>
-			</section>
+		<section class="shopping-list-area">
+			<ul class="shopping-list"></ul>
+		</section>
+
+		<form name="addItem" action="" method="post">
+			<input type="text" name="newItem" list="languages" />
+			<datalist id="languages">
+				<option value="HTML">
+				<option value="CSS">
+				<option value="JavaScript">
+				<option value="Java">
+				<option value="Ruby">
+				<option value="PHP">
+				<option value="Go">
+				<option value="Erlang">
+				<option value="Python">
+				<option value="C">
+				<option value="C#">
+				<option value="C++">
+			</datalist>
+			ok
 		</form>
-		<script src="config.js"></script>
+
+		<script src="js/config.js"></script>
 		<script src="sockerClient.js"></script>
-		<script src="main.js"></script>
+		<script src="js/item_list.js"></script>
+		<script src="js/main.js"></script>
 	</body>
 </html>
