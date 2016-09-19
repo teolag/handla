@@ -1,4 +1,4 @@
-const cacheName = 'v1::stati4c6';
+const cacheName = '5678';
 
 const cachedFiles = [
 	'/',
@@ -8,6 +8,20 @@ const cachedFiles = [
 	'js/item_list.js',
 	'css/style.css'
 ];
+
+self.addEventListener('activate', function(event) {
+  console.log("Activate new service worker.");
+
+  event.waitUntil(
+    caches.keys().then(function(keyList) {
+      return Promise.all(keyList.map(function(key) {
+      	if(key !== cacheName) {
+          return caches.delete(key);
+        }
+      }));
+    })
+  );
+});
 
 
 self.addEventListener('install', e => {
