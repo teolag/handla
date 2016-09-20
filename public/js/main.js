@@ -12,28 +12,38 @@ if ('serviceWorker' in navigator) {
 
 var ConnectionStatus = (function() {
 	var elem = document.querySelector(".connection-status"),
+		defaultClassName = elem.className;
 
 		setOffline = function() {
+			resetClassName();
 			elem.textContent = "Offline";
 			elem.classList.add("offline");
 		},
 
 		setOnline = function() {
+			resetClassName();
 			elem.textContent = "Online";
 			elem.classList.add("online");
 		},
 		setConnecting = function() {
+			resetClassName();
 			elem.textContent = "Connecting";
 			elem.classList.add("connecting");
 		},
 		setConnectingCountdown = function(s) {
+			resetClassName();
 			elem.textContent = "Retry in " + s + " seconds";
 			elem.classList.add("waiting");
 		},
 
 		setServerDown = function() {
+			resetClassName();
 			elem.textContent = "Server down";
 			elem.classList.add("server-down");
+		},
+
+		resetClassName = function() {
+			elem.className = defaultClassName;
 		};
 
 	return {
@@ -55,9 +65,12 @@ addItemForm.addEventListener("submit", addItem, false);
 
 function addItem(e) {
 	e.preventDefault();
-	var newItem = e.target.elements.newItem;
-	console.log("add", newItem.value);
-	Socker.send("addItem", {name:newItem.value});
+	var newItemInput = e.target.elements.newItem,
+		name = newItemInput.value;
+	console.log("add", name);
+	Socker.send("addItem", {name: name});
+	ItemList.add(name);
+	e.target.reset();
 }
 
 
@@ -93,6 +106,7 @@ function websocketClosed(e) {
 	console.log("websocket closed", e);
 	ConnectionStatus.setServerDown();
 
+	/*
 	var countdown = 10;
 	var counter = setInterval(function() {
 		if(countdown === 0) {
@@ -101,6 +115,7 @@ function websocketClosed(e) {
 		}
 		ConnectionStatus.setConnectingCountdown(countdown--);
 	}, 1000);
+	*/
 
 }
 function websocketError(e) {

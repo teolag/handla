@@ -9,6 +9,25 @@ button, input, select, textarea {
 
 
 
+.connection-status {
+	position: fixed;
+	top: 0;
+	right: 0;
+}
+.connection-status.online {
+	background-color: #0f0;
+}
+.connection-status.offline {
+	background-color: #f00;
+}
+.connection-status.connecting {
+	background-color: #831;
+}
+.connection-status.server-down {
+	background-color: #f00;
+}
+
+
 
 
 .shopping-list-area {

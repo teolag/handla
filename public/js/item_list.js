@@ -24,9 +24,14 @@ var ItemList = (function() {
 		list.appendChild(li);
 	}
 
+	function addItem(name) {
+		items.push({name: name});
+		refreshList(); 
+	}
+
 
 
 	return {
-
+		add: addItem
 	}
 }());
