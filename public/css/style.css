@@ -11,8 +11,11 @@ button, input, select, textarea {
 
 .connection-status {
 	position: fixed;
-	top: 0;
-	right: 0;
+	top: 0.5em;
+	right: 0.5em;
+	padding: 0.5em;
+	opacity: 0.5;
+	color: white;
 }
 .connection-status.online {
 	background-color: #0f0;
@@ -40,6 +43,9 @@ button, input, select, textarea {
 
 .shopping-list-item {
 	list-style-type: none;
+}
+.shopping-list-item.local {
+	color: #1234f3;
 }
 
 .shopping-list-item label {

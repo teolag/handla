@@ -61,7 +61,11 @@ socker.init(server, {
 
 socker.on("addItem", function(connection, data, type) {
 	console.log("adda!", data);
-	db.insert({name:data.name, added: new Date()});
+	db.insert({name:data.name, added: new Date()}, function(err, item) {
+		if(err) throw "error saving item";
+		if(data._id) item.tempId = data._id;
+		socker.sendToAll("newItem", item);
+	});
 });
 
 

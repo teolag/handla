@@ -68,7 +68,6 @@ function addItem(e) {
 	var newItemInput = e.target.elements.newItem,
 		name = newItemInput.value;
 	console.log("add", name);
-	Socker.send("addItem", {name: name});
 	ItemList.add(name);
 	e.target.reset();
 }
