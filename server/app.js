@@ -40,7 +40,7 @@ var fs = require('fs'),
 	};
 
 var server = https.createServer(options, app).listen(config.port, listenStart);
-
+process.on("exit", processEnded);
 
 
 var logger = function(req, res, next) {
@@ -51,7 +51,6 @@ var logger = function(req, res, next) {
 app.use(logger); // Here you add your logger to the stack.
 app.use("/sockerClient.js", express.static(__dirname + '/../Socker/sockerClient.js'));
 app.use(express.static('public'));
-
 
 socker.init(server, {
 	connectCallback: userConnected,
@@ -79,4 +78,9 @@ function userConnected(con) {
 
 function listenStart() {
 	console.log("listening on port " + config.port);
+}
+
+
+function processEnded(code) {
+	console.log("Process ended", code, "\n \n \n");
 }

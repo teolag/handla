@@ -1,5 +1,5 @@
 module.exports = {
-	port: 55555,
+	port: 8080,
 	cert: __dirname + '/cert.pem',
 	certKey: __dirname + '/key.pem',
 	websocket: {

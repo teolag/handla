@@ -1,0 +1,6 @@
+{
+	"name": "handla",
+	"script": "/git/handla/server/app.js",
+	"watch": "server",
+	"ignore_watch": ["server/config.template.js", "server/item_store"]
+}
