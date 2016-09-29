@@ -41,14 +41,25 @@ button, input, select, textarea {
 }
 
 .shopping-list-item {
+	display: flex;
 	list-style-type: none;
+	padding: 0.5em;
+	margin-bottom: 0.2em;
+	background-color: #fff;
+	align-items: center;
 }
 .shopping-list-item.local {
 	color: #1234f3;
 }
 
 .shopping-list-item label {
-	display: block;
 	padding: 0.5em;
-	border: 1px solid #ddd;
+}
+
+.shopping-list-item .name {
+	flex: 1;
+}
+
+.shopping-list-item .delete-button {
+	
 }

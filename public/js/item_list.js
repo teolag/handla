@@ -2,6 +2,7 @@ var ItemList = (function() {
 	var items = [];
 	var list = document.querySelector(".shopping-list");
 	list.addEventListener("change", listChange, false);
+	list.addEventListener("click", listClick, false);
 	Socker.on("allItems", allItemsCallback);
 	Socker.on("newItem", newItemCallback);
 	loadCachedList();
@@ -81,17 +82,19 @@ var ItemList = (function() {
 			label = document.createElement("label"),
 			checkbox = document.createElement("input"),
 			nameSpan = document.createElement("span"),
-			deleteButton = document.createElement("span");
+			deleteButton = document.createElement("button");
 		checkbox.type = "checkbox";
 		checkbox.name = item._id;
 		nameSpan.textContent = item.name;
+		nameSpan.className = "name";
 		deleteButton.textContent = "x";
+		deleteButton.className = "delete-item";
 		label.appendChild(checkbox);
-		label.appendChild(nameSpan);
-		label.appendChild(deleteButton);
 		li.dataset.id = item._id;
 		li.className = "shopping-list-item";
 		li.appendChild(label);
+		li.appendChild(nameSpan);
+		li.appendChild(deleteButton);
 
 		if(item.localOnly) li.classList.add("local");
 		list.appendChild(li);
