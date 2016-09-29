@@ -37,7 +37,9 @@ var ItemList = (function() {
 		//console.log("listClick", e);
 
 		if(e.target.className === "delete-item") {
-			alert("ta bort");
+			var itemId = e.target.parentElement.dataset.id;
+			Socker.send("itemDelete", {id:itemId});
+			e.target.parentElement.classList.add("delete");
 		}
 
 	}

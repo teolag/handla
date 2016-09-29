@@ -47,7 +47,19 @@ button, input, select, textarea {
 	margin-bottom: 0.2em;
 	background-color: #fff;
 	align-items: center;
+	transition: height .4s linear .3s, 
+				padding .1s linear .3s, 
+				margin .1s linear .3s, 
+				transform .2s linear;
+	height: 2em;
 }
+.shopping-list-item.delete {
+	height: 0;
+	padding: 0;
+	margin: 0;
+	transform: translate(100%, 0);
+}
+
 .shopping-list-item.local {
 	color: #1234f3;
 }
