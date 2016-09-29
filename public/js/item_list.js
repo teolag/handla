@@ -31,6 +31,14 @@ var ItemList = (function() {
 			item.checked = e.target.checked;
 			Socker.send("itemChecked", {id:itemId, checked:item.checked});
 		}
+	}
+
+	function listClick(e) {
+		//console.log("listClick", e);
+
+		if(e.target.className === "delete-item") {
+			alert("ta bort");
+		}
 
 	}
 
