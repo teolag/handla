@@ -80,12 +80,15 @@ var ItemList = (function() {
 		var li = document.createElement("li"),
 			label = document.createElement("label"),
 			checkbox = document.createElement("input"),
-			nameSpan = document.createElement("span");
+			nameSpan = document.createElement("span"),
+			deleteButton = document.createElement("span");
 		checkbox.type = "checkbox";
 		checkbox.name = item._id;
 		nameSpan.textContent = item.name;
+		deleteButton.textContent = "x";
 		label.appendChild(checkbox);
 		label.appendChild(nameSpan);
+		label.appendChild(deleteButton);
 		li.dataset.id = item._id;
 		li.className = "shopping-list-item";
 		li.appendChild(label);

@@ -1,4 +1,4 @@
-const cacheName = 'ddddsdddd';
+const cacheName = 'ddddsfdddd';
 
 const cachedFiles = [
 	'/',
