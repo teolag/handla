@@ -55,6 +55,7 @@ button, input, select, textarea {
 				width .2s linear,
 				transform .2s linear;
 	height: 2em;
+	border-radius: 1.1em 0 0 1.1em;
 }
 .shopping-list-item.delete {
 	height: 0;
@@ -69,23 +70,29 @@ button, input, select, textarea {
 
 .shopping-list-item label {
 	cursor: pointer;
+	border-radius: 50%;
 	margin-right: 0.5rem;
-	color: rgba(0,0,0,0.1);
+	margin-left: 0.2rem;
+	color: #fff;
+	background-color: rgba(0,0,0,0.1);
 	font-size: 0.8em;
 	width: 2rem;
 	height: 2rem;
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	-webkit-tap-highlight-color: transparent;
 }
+.shopping-list-item label:active {
+
+}
+
 .shopping-list-item input:focus + label {
 	/*outline: 2px solid blue;*/
 }
 .shopping-list-item input:checked + label {
-	color: #fff;
 	font-size: 1.2em;
 	background-color: #a6de39;
-	border-radius: 50%;
 }
 .shopping-list-item input {
 	opacity: 0;

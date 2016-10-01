@@ -3,6 +3,11 @@ var ItemList = (function() {
 	var list = document.querySelector(".shopping-list");
 	list.addEventListener("change", listChange, false);
 	list.addEventListener("click", listClick, false);
+	list.addEventListener("touchstart", touchstart, false);
+	document.addEventListener("touchmove", touchend, true);
+	list.addEventListener("touchend", touchend, false);
+
+
 	Socker.on("allItems", allItemsCallback);
 	Socker.on("newItem", newItemCallback);
 	loadCachedList();
@@ -131,6 +136,36 @@ var ItemList = (function() {
 		}
 		return 0;
 	}
+
+
+
+
+
+	var onlongtouch; 
+	var timer;
+	var touchduration = 666; //length of time we want the user to touch before we do something
+
+	function touchstart(e) {
+		console.log("touchstart");
+		//e.preventDefault();
+	    timer = setTimeout(onlongtouch, touchduration); 
+	}
+
+	function touchend(e) {
+	    //stops short touches from firing the event
+	    console.log("touchend", e.type);
+	    if (timer) {
+	        clearTimeout(timer); // clearTimeout, not cleartimeout..
+		}
+	}
+
+	onlongtouch = function() { 
+		alert("long press");
+	};
+
+
+
+
 
 
 	return {
