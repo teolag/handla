@@ -1,5 +1,6 @@
 body {
 	background-color: #d6d8c4;
+	font: 16px sans-serif;
 }
 
 button, input, select, textarea {
@@ -49,7 +50,8 @@ button, input, select, textarea {
 	align-items: center;
 	transition: height .4s linear .3s, 
 				padding .1s linear .3s, 
-				margin .1s linear .3s, 
+				margin .1s linear .3s,
+				width .2s linear,
 				transform .2s linear;
 	height: 2em;
 }

@@ -1,4 +1,4 @@
-const cacheName = 'eft4ff';
+const cacheName = 'version.2';
 
 const cachedFiles = [
 	'/',
@@ -24,13 +24,19 @@ self.addEventListener('activate', function(event) {
 });
 
 
+self.addEventListener('message', function(event) {
+  if (event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('install', e => {
 	console.log("Installing service worker");
 	e.waitUntil(
 		caches.open(cacheName).then(cache => {
 			return cache.addAll(cachedFiles).then(function() {
 				console.log("Installation complete");
-				self.skipWaiting();
+				//self.skipWaiting();
 			});
 		})
 	);

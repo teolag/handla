@@ -2,11 +2,66 @@ if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('sw.js')
 		.then(function(registration) {
 			console.log('Service worker registered : ', registration.scope);
+
+			// no service worker active, first visit
+			if (!navigator.serviceWorker.controller) {
+				console.log("first visit?");
+				return;
+			}
+
+			if (registration.waiting) {
+				console.log("new worker ready");
+				updateReady(registration.waiting);
+				return;
+			}
+
+			if (registration.installing) {
+				console.log("new worker installing");
+				trackInstalling(registration.installing);
+				return;
+			}
+
+			registration.addEventListener('updatefound', function() {
+				console.log("new worker found, track installation");
+				trackInstalling(registration.installing);
+			});
     	})
 		.catch(function(err) {
 			console.log("Service worker registration failed : ", err);
 		})
 	;
+
+	var refreshing;
+	navigator.serviceWorker.addEventListener('controllerchange', function() {
+		if (refreshing) return;
+		window.location.reload();
+		refreshing = true;
+	});
+
+	var trackInstalling = function(worker) {
+		var indexController = this;
+		worker.addEventListener('statechange', function() {
+			if (worker.state == 'installed') {
+				updateReady(worker);
+			}
+		});
+	};
+
+	var updateReady = function(worker) {
+		console.log("Update ready!");
+		worker.postMessage({action: 'skipWaiting'});
+
+		/*
+		var toast = this._toastsView.show("New version available", {
+			buttons: ['refresh', 'dismiss']
+		});
+
+		toast.answer.then(function(answer) {
+			if (answer != 'refresh') return;
+			worker.postMessage({action: 'skipWaiting'});
+		});
+		*/
+	};
 }
 
 

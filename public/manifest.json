@@ -8,11 +8,11 @@
 	"theme_color": "#c1de38",
 	"description": "A simply readable Hacker News app.",
 	"icons": [{
-		"src": "icon/cart_128.png",
-		"sizes": "128x128",
+		"src": "icon/basket_64.png",
+		"sizes": "64x64",
 		"type": "image/png"
       }, {
-		"src": "icon/cart_256.png",
+		"src": "icon/basket_256.png",
 		"sizes": "256x256",
 		"type": "image/png"
       }]
