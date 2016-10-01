@@ -1,12 +1,12 @@
 {
-	"name": "Handla",
+	"name": "Handla mat",
 	"short_name": "Handla",
 	"start_url": ".",
 	"display": "standalone",
 	"orientation": "portrait",
-	"background_color": "#d6d8c4",
-	"theme_color": "#c1de38",
-	"description": "A simply readable Hacker News app.",
+	"background_color": "#b1c2c7",
+	"theme_color": "#18abd6",
+	"description": "The best shopping list ever",
 	"icons": [{
 		"src": "icon/basket_64.png",
 		"sizes": "64x64",

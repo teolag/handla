@@ -1,4 +1,4 @@
-const cacheName = 'version.2';
+const cacheName = 'version_4';
 
 const cachedFiles = [
 	'/',
@@ -6,7 +6,8 @@ const cachedFiles = [
 	'sockerClient.js',
 	'js/config.js',
 	'js/item_list.js',
-	'css/style.css'
+	'css/style.css',
+	'https://fonts.googleapis.com/css?family=Roboto+Condensed'
 ];
 
 self.addEventListener('activate', function(event) {
