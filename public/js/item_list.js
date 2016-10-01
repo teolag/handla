@@ -95,13 +95,16 @@ var ItemList = (function() {
 			deleteButton = document.createElement("button");
 		checkbox.type = "checkbox";
 		checkbox.name = item._id;
+		checkbox.id = "item_"+item._id;
+		label.setAttribute("for", "item_"+item._id);
+		label.innerHTML = "&#10003;";
 		nameSpan.textContent = item.name;
 		nameSpan.className = "name";
 		deleteButton.textContent = "x";
 		deleteButton.className = "delete-item";
-		label.appendChild(checkbox);
 		li.dataset.id = item._id;
 		li.className = "shopping-list-item";
+		li.appendChild(checkbox);
 		li.appendChild(label);
 		li.appendChild(nameSpan);
 		li.appendChild(deleteButton);

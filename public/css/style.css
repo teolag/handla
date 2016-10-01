@@ -39,12 +39,13 @@ button, input, select, textarea {
 
 .shopping-list {
 	padding: 0;
+	font-size: 1.2rem;
 }
 
 .shopping-list-item {
 	display: flex;
 	list-style-type: none;
-	padding: 0.5em;
+	padding: 0.2em;
 	margin-bottom: 0.2em;
 	background-color: #fff;
 	align-items: center;
@@ -67,7 +68,30 @@ button, input, select, textarea {
 }
 
 .shopping-list-item label {
-	padding: 0.5em;
+	cursor: pointer;
+	margin-right: 0.5rem;
+	color: rgba(0,0,0,0.1);
+	font-size: 0.8em;
+	width: 2rem;
+	height: 2rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.shopping-list-item input:focus + label {
+	/*outline: 2px solid blue;*/
+}
+.shopping-list-item input:checked + label {
+	color: #fff;
+	font-size: 1.2em;
+	background-color: #a6de39;
+	border-radius: 50%;
+}
+.shopping-list-item input {
+	opacity: 0;
+	margin: 0;
+	width: 0;
+	height: 0;
 }
 
 .shopping-list-item .name {
