@@ -4,6 +4,7 @@ var ItemList = (function() {
 	list.addEventListener("change", listChange, false);
 	list.addEventListener("click", listClick, false);
 	list.addEventListener("touchstart", touchstart, false);
+	list.addEventListener("contextmenu", contextMenu, false);
 	document.addEventListener("touchmove", touchend, true);
 	list.addEventListener("touchend", touchend, false);
 
@@ -157,6 +158,11 @@ var ItemList = (function() {
 	    if (timer) {
 	        clearTimeout(timer); // clearTimeout, not cleartimeout..
 		}
+	}
+
+	function contextMenu() {
+		alert("context menu");
+		e.preventDefault();
 	}
 
 	onlongtouch = function() { 
