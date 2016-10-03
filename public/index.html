@@ -23,24 +23,35 @@
 			<ul class="shopping-list"></ul>
 		</section>
 
-		<form name="addItem" action="" method="post">
-			<input type="text" name="newItem" list="languages" />
-			<datalist id="languages">
-				<option value="HTML">
-				<option value="CSS">
-				<option value="JavaScript">
-				<option value="Java">
-				<option value="Ruby">
-				<option value="PHP">
-				<option value="Go">
-				<option value="Erlang">
-				<option value="Python">
-				<option value="C">
-				<option value="C#">
-				<option value="C++">
-			</datalist>
-			<button type="submit">Lägg till</button>
-		</form>
+		
+
+
+		<button type="button" id="btnNewItem" class="button-new-item">+</button>
+
+
+
+		<div id="dialogAddItem" class="modal modal-background" style="display: none">
+			<div class="modal-window">
+				<form name="addItem" action="" method="post">
+					<input type="text" name="newItem" list="languages" />
+					<datalist id="languages">
+						<option value="HTML">
+						<option value="CSS">
+						<option value="JavaScript">
+						<option value="Java">
+						<option value="Ruby">
+						<option value="PHP">
+						<option value="Go">
+						<option value="Erlang">
+						<option value="Python">
+						<option value="C">
+						<option value="C#">
+						<option value="C++">
+					</datalist>
+					<button type="submit">Lägg till</button>
+				</form>
+			</div>
+		</div>
 
 		<script src="js/config.js"></script>
 		<script src="sockerClient.js"></script>

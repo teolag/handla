@@ -67,6 +67,20 @@ socker.on("addItem", function(connection, data, type) {
 	});
 });
 
+socker.on("itemDelete", function(connection, data, type) {
+	db.remove({_id: data.id}, function(err) {
+		console.log("item removed", err);
+		socker.sendToAll("deletedItem", data.id);
+	});
+});
+
+socker.on("itemChecked", function(connection, data, type) {
+	db.update({_id: data.id}, {$set: {checked:data.checked}}, {}, function(err) {
+		console.log("item " + (data.checked? "checked": "unchecked"), err);
+		socker.sendToAll("checkedItem", data);
+	});
+});
+
 
 
 

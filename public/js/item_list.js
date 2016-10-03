@@ -3,11 +3,6 @@ var ItemList = (function() {
 	var list = document.querySelector(".shopping-list");
 	list.addEventListener("change", listChange, false);
 	list.addEventListener("click", listClick, false);
-	list.addEventListener("touchstart", touchstart, false);
-	list.addEventListener("contextmenu", contextMenu, false);
-	document.addEventListener("touchmove", touchend, true);
-	list.addEventListener("touchend", touchend, false);
-
 
 	Socker.on("allItems", allItemsCallback);
 	Socker.on("newItem", newItemCallback);
@@ -102,6 +97,7 @@ var ItemList = (function() {
 		checkbox.type = "checkbox";
 		checkbox.name = item._id;
 		checkbox.id = "item_"+item._id;
+		if(item.checked) checkbox.checked="checked";
 		label.setAttribute("for", "item_"+item._id);
 		label.innerHTML = "&#10003;";
 		nameSpan.textContent = item.name;
@@ -137,42 +133,6 @@ var ItemList = (function() {
 		}
 		return 0;
 	}
-
-
-
-
-
-	var onlongtouch; 
-	var timer;
-	var touchduration = 666; //length of time we want the user to touch before we do something
-
-	function touchstart(e) {
-		console.log("touchstart");
-		//e.preventDefault();
-	    timer = setTimeout(onlongtouch, touchduration); 
-	}
-
-	function touchend(e) {
-	    //stops short touches from firing the event
-	    console.log("touchend", e.type);
-	    if (timer) {
-	        clearTimeout(timer); // clearTimeout, not cleartimeout..
-		}
-	}
-
-	function contextMenu() {
-		alert("context menu");
-		e.preventDefault();
-	}
-
-	onlongtouch = function() { 
-		alert("long press");
-	};
-
-
-
-
-
 
 	return {
 		add: addItem

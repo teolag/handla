@@ -116,18 +116,25 @@ connectToWebsocket()
 
 
 var addItemForm = document.forms.addItem;
+var btnNewItem = document.getElementById("btnNewItem");
+var dialogAddItem = document.getElementById("dialogAddItem");
+var newItemInput = addItemForm.elements.newItem;
 addItemForm.addEventListener("submit", addItem, false);
+btnNewItem.addEventListener("click", showAddItem, false);
 
 function addItem(e) {
 	e.preventDefault();
-	var newItemInput = e.target.elements.newItem,
-		name = newItemInput.value;
+	var name = newItemInput.value;
 	console.log("add", name);
 	ItemList.add(name);
-	e.target.reset();
+	addItemForm.reset();
+	hide(dialogAddItem);
 }
 
-
+function showAddItem(e) {
+	show(dialogAddItem);
+	newItemInput.focus();
+}
 
 
 window.addEventListener('online',  updateOnlineStatus);
@@ -174,4 +181,18 @@ function websocketClosed(e) {
 }
 function websocketError(e) {
 	console.log("error connecting to websocket", e);
+}
+
+
+
+
+
+
+
+
+function show(elem) {
+	elem.style.display = "";
+}
+function hide(elem) {
+	elem.style.display = "none";
 }

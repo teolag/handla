@@ -11,9 +11,9 @@
 		"src": "icon/basket_64.png",
 		"sizes": "64x64",
 		"type": "image/png"
-      }, {
+	}, {
 		"src": "icon/basket_256.png",
 		"sizes": "256x256",
 		"type": "image/png"
-      }]
+	}]
 }
