@@ -1,14 +1,19 @@
-var ItemList = (function() {
+(function(exports) {
+	var socker = require("xio-socker").client;
+	var list;
 	var items = [];
-	var list = document.querySelector(".shopping-list");
-	list.addEventListener("change", listChange, false);
-	list.addEventListener("click", listClick, false);
 
-	Socker.on("allItems", allItemsCallback);
-	Socker.on("newItem", newItemCallback);
-	loadCachedList();
-	sendAllLocalItems();
-	
+	function init() {
+		list = document.querySelector(".shopping-list");
+		list.addEventListener("change", listChange, false);
+		list.addEventListener("click", listClick, false);
+
+		socker.on("allItems", allItemsCallback);
+		socker.on("newItem", newItemCallback);
+		loadCachedList();
+		sendAllLocalItems();
+	}
+
 
 	function sendAllLocalItems() {
 		console.log("any local items?");
@@ -16,7 +21,7 @@ var ItemList = (function() {
 			return item.localOnly;
 		}).forEach(function(item) {
 			console.log("send local", item);
-			Socker.send("addItem", item);
+			socker.send("addItem", item);
 		});
 	}
 
@@ -30,7 +35,7 @@ var ItemList = (function() {
 		});
 		if(item) {
 			item.checked = e.target.checked;
-			Socker.send("itemChecked", {id:itemId, checked:item.checked});
+			socker.send("itemChecked", {id:itemId, checked:item.checked});
 		}
 	}
 
@@ -39,7 +44,7 @@ var ItemList = (function() {
 
 		if(e.target.className === "delete-item") {
 			var itemId = e.target.parentElement.dataset.id;
-			Socker.send("itemDelete", {id:itemId});
+			socker.send("itemDelete", {id:itemId});
 			e.target.parentElement.classList.add("delete");
 		}
 
@@ -119,7 +124,7 @@ var ItemList = (function() {
 		var tempId = "temp"+(+new Date());
 		var item = {name: name, _id:tempId, localOnly:true};
 		items.push(item);
-		Socker.send("addItem", item);
+		socker.send("addItem", item);
 		saveCacheList();
 		refreshList(); 
 	}
@@ -134,7 +139,7 @@ var ItemList = (function() {
 		return 0;
 	}
 
-	return {
-		add: addItem
-	}
-}());
+	exports.init = init;
+	exports.add = addItem;
+	
+}(typeof exports === 'undefined'? this['ItemList']={}: exports));

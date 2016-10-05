@@ -1,6 +1,6 @@
-var Socker = require("xio-socker").client;
-
-
+var socker = require("xio-socker").client;
+var ItemList = require("./item_list");
+var config = require("./config");
 
 if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('sw.js')
@@ -114,7 +114,9 @@ var ConnectionStatus = (function() {
 	}
 }());
 
-connectToWebsocket()
+
+ItemList.init();
+connectToWebsocket();
 
 
 
@@ -145,7 +147,7 @@ window.addEventListener('online',  updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 function updateOnlineStatus(event) {
     if(navigator.onLine) {
-    	if(Socker.connected()) {
+    	if(socker.connected()) {
     		console.log("online again, websocket still active");
     		ConnectionStatus.setOnline();
     	} else {
@@ -161,7 +163,7 @@ function updateOnlineStatus(event) {
 
 function connectToWebsocket() {
 	ConnectionStatus.setConnecting();
-	Socker.connect(config.websocket.url, config.websocket.protocol, websocketConnected, websocketClosed, websocketError);
+	socker.connect(config.websocket.url, config.websocket.protocol, websocketConnected, websocketClosed, websocketError);
 }
 function websocketConnected(e) {
 	console.log("connected to websocket", e);

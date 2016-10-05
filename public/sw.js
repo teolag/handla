@@ -2,11 +2,8 @@ const cacheName = 'version_19';
 
 const cachedFiles = [
 	'/',
-	'js/main.js',
-	'sockerClient.js',
-	'js/config.js',
-	'js/item_list.js',
-	'css/style.css',
+	'script.js',
+	'style.css',
 	'https://fonts.googleapis.com/css?family=Roboto+Condensed'
 ];
 
