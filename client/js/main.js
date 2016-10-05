@@ -1,3 +1,7 @@
+var Socker = require("xio-socker").client;
+
+
+
 if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('sw.js')
 		.then(function(registration) {

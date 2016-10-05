@@ -21,9 +21,7 @@ Lägga till ett item
 
 
 
-
 */
-
 
 
 var fs = require('fs'),
@@ -31,7 +29,7 @@ var fs = require('fs'),
     express = require('express'),
     app = express(),
     config = require('./config'),
-    socker = require('xio-socker'),
+    socker = require('xio-socker').server,
 	Datastore = require('nedb'),
   	db = new Datastore({ filename: 'server/item_store', autoload: true }),
     options = {
