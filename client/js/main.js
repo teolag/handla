@@ -1,4 +1,4 @@
-var socker = require("xio-socker").client;
+var socker = require("xio-socker");
 var ItemList = require("./item_list");
 var config = require("./config");
 

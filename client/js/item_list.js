@@ -1,5 +1,5 @@
 (function(exports) {
-	var socker = require("xio-socker").client;
+	var socker = require("xio-socker");
 	var list;
 	var items = [];
 

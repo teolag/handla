@@ -1,4 +1,4 @@
-const cacheName = 'version_19';
+const cacheName = 'version_20';
 
 const cachedFiles = [
 	'/',

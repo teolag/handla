@@ -8,7 +8,7 @@ module.exports = {
 
 },{}],2:[function(require,module,exports){
 (function(exports) {
-	var socker = require("xio-socker").client;
+	var socker = require("xio-socker");
 	var list;
 	var items = [];
 
@@ -153,7 +153,7 @@ module.exports = {
 	
 }(typeof exports === 'undefined'? this['ItemList']={}: exports));
 },{"xio-socker":4}],3:[function(require,module,exports){
-var socker = require("xio-socker").client;
+var socker = require("xio-socker");
 var ItemList = require("./item_list");
 var config = require("./config");
 
@@ -358,9 +358,7 @@ function hide(elem) {
 	elem.style.display = "none";
 }
 },{"./config":1,"./item_list":2,"xio-socker":4}],4:[function(require,module,exports){
-module.exports = require('./lib/socker');
-},{"./lib/socker":7}],5:[function(require,module,exports){
-(function(exports) {
+var socker = (function() {
 	var socket,
 		connected = false,
 		messageListeners = {},
@@ -441,262 +439,15 @@ module.exports = require('./lib/socker');
 		return socket && socket.readyState === 1;
 	}
 
+	return {
+		connect: connect,
+		send: sendMessage,
+		on: addMessageListener,
+		connected: isConnected
+	}	
+}());
 
-	exports.connect = connect;
-	exports.send = sendMessage;
-	exports.on = addMessageListener;
-	exports.connected = isConnected;
-
-
-})(typeof exports === 'undefined'? this['socker']={}: exports);
-},{}],6:[function(require,module,exports){
-"use strict";
-
-var WebSocketServer = require('websocket').server;
-var connections=[], conId=1;
-var listeners={};
-var options;
-
-
-function init(server, opt) {
-	options = opt;
-
-	var wsServer = new WebSocketServer({httpServer: server, autoAcceptConnections: false});
-
-	wsServer.on('request', function(request) {
-		validateRequest(request, options.allowedOrigin, options.allowedProtocol);
-	});
-
-	wsServer.on('connect', newConnection);
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = socker;
 }
-
-
-function newConnection(con) {
-	con.id = conId++;
-	con.on('message', function(message) {
-		incomingMessage(con, message);
-	});
-	con.on('close', function(reasonCode, description) {
-		console.log("Connection " + con.id + " closed. ", reasonCode, description);
-		var index = connections.indexOf(con);
-		if(index >= 0) connections.splice(index, 1);
-		console.log("Number of connected users:", connections.length, connections.map(function(c) { return "con " + c.id }));
-	});
-	connections.push(con);
-	console.log("Number of connected users:", connections.length, connections.map(function(c) { return "con " + c.id }));
-	if(options.connectCallback) options.connectCallback(con);
-}
-
-
-function incomingMessage(con, message) {
-	if(message.type !== 'utf8') {
-		console.error("Invalid message", message);
-		return;
-	}
-	var payload = JSON.parse(message.utf8Data);
-	var type = payload.type;
-	var data = payload.data;
-	if(!type) {
-		console.error("Empty message type", data);
-		return;
-	}
-
-
-	if(listeners.hasOwnProperty(type)) {
-		listeners[type].forEach(function(callback) {
-			console.log("Message from connection " + con.id + ":", type, data);
-			callback(con, data, type);
-		});
-	} else {
-		console.log("Unhandled message from connection " + con.id + ":", type, data);
-	}
-}
-
-
-function validateRequest(request, allowedOrigin, allowedProtocol) {
-	console.log("Incoming connection from ", request.remoteAddress, "with origin:", request.origin, "requestedProtocols:", request.requestedProtocols);
-	if (allowedOrigin && allowedOrigin !== request.origin) {
-		console.log("Origin not allowed:", request.origin, allowedOrigin);
-		request.reject();
-	} else if (allowedProtocol && request.requestedProtocols.indexOf(allowedProtocol) === -1) {
-		console.log("Protocols not allowed:", request.requestedProtocols);
-		request.reject();
-	} else {
-		request.accept(allowedProtocol, allowedOrigin);
-	}
-}
-
-function addMessageListener(type, callback) {
-	if(!listeners.hasOwnProperty(type)) listeners[type] = [];
-	listeners[type].push(callback);
-}
-
-function sendMessageTo(con, type, data) {
-	var payload = {type: type, data: data};
-	con.sendUTF(JSON.stringify(payload));
-}
-
-function sendMessageToAll(type, data) {
-	sendMessageToAllBut(type, data, null);
-}
-
-function sendMessageToAllBut(type, data, exclude) {
-	connections.forEach(function(con) {
-		if(con !== exclude) {
-			sendMessageTo(con, type, data);
-		}
-	});
-}
-
-
-module.exports = {
-	init: init,
-	on: addMessageListener,
-	sendTo: sendMessageTo,
-	sendToAll: sendMessageToAll,
-	sendToAllBut: sendMessageToAllBut
-};
-},{"websocket":8}],7:[function(require,module,exports){
-module.exports = {
-    'server'       : require('./socker-server'),
-    'client'       : require('./socker-client')
-};
-
-},{"./socker-client":5,"./socker-server":6}],8:[function(require,module,exports){
-var _global = (function() { return this; })();
-var nativeWebSocket = _global.WebSocket || _global.MozWebSocket;
-var websocket_version = require('./version');
-
-
-/**
- * Expose a W3C WebSocket class with just one or two arguments.
- */
-function W3CWebSocket(uri, protocols) {
-	var native_instance;
-
-	if (protocols) {
-		native_instance = new nativeWebSocket(uri, protocols);
-	}
-	else {
-		native_instance = new nativeWebSocket(uri);
-	}
-
-	/**
-	 * 'native_instance' is an instance of nativeWebSocket (the browser's WebSocket
-	 * class). Since it is an Object it will be returned as it is when creating an
-	 * instance of W3CWebSocket via 'new W3CWebSocket()'.
-	 *
-	 * ECMAScript 5: http://bclary.com/2004/11/07/#a-13.2.2
-	 */
-	return native_instance;
-}
-
-
-/**
- * Module exports.
- */
-module.exports = {
-    'w3cwebsocket' : nativeWebSocket ? W3CWebSocket : null,
-    'version'      : websocket_version
-};
-
-},{"./version":9}],9:[function(require,module,exports){
-module.exports = require('../package.json').version;
-
-},{"../package.json":10}],10:[function(require,module,exports){
-module.exports={
-  "name": "websocket",
-  "description": "Websocket Client & Server Library implementing the WebSocket protocol as specified in RFC 6455.",
-  "keywords": [
-    "websocket",
-    "websockets",
-    "socket",
-    "networking",
-    "comet",
-    "push",
-    "RFC-6455",
-    "realtime",
-    "server",
-    "client"
-  ],
-  "author": {
-    "name": "Brian McKelvey",
-    "email": "brian@worlize.com",
-    "url": "https://www.worlize.com/"
-  },
-  "contributors": [
-    {
-      "name": "Iñaki Baz Castillo",
-      "email": "ibc@aliax.net",
-      "url": "http://dev.sipdoc.net"
-    }
-  ],
-  "version": "1.0.23",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/theturtle32/WebSocket-Node.git"
-  },
-  "homepage": "https://github.com/theturtle32/WebSocket-Node",
-  "engines": {
-    "node": ">=0.8.0"
-  },
-  "dependencies": {
-    "debug": "^2.2.0",
-    "nan": "^2.3.3",
-    "typedarray-to-buffer": "^3.1.2",
-    "yaeti": "^0.0.4"
-  },
-  "devDependencies": {
-    "buffer-equal": "^0.0.1",
-    "faucet": "^0.0.1",
-    "gulp": "git+https://github.com/gulpjs/gulp.git#4.0",
-    "gulp-jshint": "^1.11.2",
-    "jshint-stylish": "^1.0.2",
-    "tape": "^4.0.1"
-  },
-  "config": {
-    "verbose": false
-  },
-  "scripts": {
-    "install": "(node-gyp rebuild 2> builderror.log) || (exit 0)",
-    "test": "faucet test/unit",
-    "gulp": "gulp"
-  },
-  "main": "index",
-  "directories": {
-    "lib": "./lib"
-  },
-  "browser": "lib/browser.js",
-  "license": "Apache-2.0",
-  "gitHead": "ba2fa7e9676c456bcfb12ad160655319af66faed",
-  "bugs": {
-    "url": "https://github.com/theturtle32/WebSocket-Node/issues"
-  },
-  "_id": "websocket@1.0.23",
-  "_shasum": "20de8ec4a7126b09465578cd5dbb29a9c296aac6",
-  "_from": "websocket@>=1.0.23 <2.0.0",
-  "_npmVersion": "2.15.1",
-  "_nodeVersion": "0.10.45",
-  "_npmUser": {
-    "name": "theturtle32",
-    "email": "brian@worlize.com"
-  },
-  "maintainers": [
-    {
-      "name": "theturtle32",
-      "email": "brian@worlize.com"
-    }
-  ],
-  "dist": {
-    "shasum": "20de8ec4a7126b09465578cd5dbb29a9c296aac6",
-    "tarball": "https://registry.npmjs.org/websocket/-/websocket-1.0.23.tgz"
-  },
-  "_npmOperationalInternal": {
-    "host": "packages-16-east.internal.npmjs.com",
-    "tmp": "tmp/websocket-1.0.23.tgz_1463625793005_0.4532310354989022"
-  },
-  "_resolved": "https://registry.npmjs.org/websocket/-/websocket-1.0.23.tgz",
-  "readme": "ERROR: No README data found!"
-}
-
 },{}]},{},[3]);
