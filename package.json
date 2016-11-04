@@ -4,14 +4,15 @@
   "description": "",
   "main": "server/app.js",
   "dependencies": {
+    "browserify": "^13.1.0",
     "express": "^4.14.0",
     "nedb": "^1.8.0",
-    "websocket": "^1.0.23"
+    "xio-socker": "*"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-js": "browserify client/js/main.js -o public/script.js"
   },
-  "author": "",
-  "license": "ISC"
+  "private": true
 }

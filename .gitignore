@@ -4,4 +4,4 @@ server/config.js
 server/cert.pem
 server/key.pem
 server/item_store
-public/js/config.js
+client/js/config.js
