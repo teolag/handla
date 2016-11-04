@@ -1,6 +1,7 @@
 var socker = require("xio-socker");
 var ItemList = require("./item_list");
 var config = require("./config");
+var IDB = require("./storage");
 
 if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('sw.js')
@@ -54,18 +55,15 @@ if ('serviceWorker' in navigator) {
 	var updateReady = function(worker) {
 		console.log("Update ready!");
 		worker.postMessage({action: 'skipWaiting'});
-
-		/*
-		var toast = this._toastsView.show("New version available", {
-			buttons: ['refresh', 'dismiss']
-		});
-
-		toast.answer.then(function(answer) {
-			if (answer != 'refresh') return;
-			worker.postMessage({action: 'skipWaiting'});
-		});
-		*/
 	};
+
+	navigator.serviceWorker.onmessage = function(e) {
+		console.log("Message form SW", e);
+		if(e.data === "updateList") {
+			ItemList.refresh();
+		}
+	}
+
 }
 
 
@@ -115,7 +113,21 @@ var ConnectionStatus = (function() {
 }());
 
 
-ItemList.init();
+var storage = new IDB("handla", 1, storageUpdate);
+var storageName = 'items';
+function storageUpdate(e) {
+	console.log("Upgrading db");
+
+	var db = e.target.result;
+	if(!db.objectStoreNames.contains(storageName)) {
+		var objectStore = db.createObjectStore(storageName, {keyPath: "id", autoIncrement:true});
+		objectStore.createIndex("name", "name", {unique: false});
+		objectStore.createIndex("_id", "_id", {unique: true});
+	}
+}
+
+
+ItemList.init(storage);
 connectToWebsocket();
 
 

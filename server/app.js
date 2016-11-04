@@ -29,8 +29,9 @@ var fs = require('fs'),
     express = require('express'),
     app = express(),
     config = require('./config'),
-    socker = require('xio-socker').server,
+    socker = require('xio-socker'),
 	Datastore = require('nedb'),
+	bodyParser = require('body-parser'),
   	db = new Datastore({ filename: 'server/item_store', autoload: true }),
     options = {
 		cert: fs.readFileSync(config.cert),
@@ -42,11 +43,36 @@ process.on("exit", processEnded);
 
 
 var logger = function(req, res, next) {
-    console.log("GOT REQUEST !", req.url);
+    console.log(req.method, "REQUEST", req.url);
     next(); // Passing the request to the next handler in the stack.
 }
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(logger); // Here you add your logger to the stack.
+app.post("/syncItems", function(req, res) {
+	console.log("synca items", req.body);
+
+	var newItems = req.body.newItems.map(function(item) {
+		return {
+			name: item.name,
+			added: new Date(), 
+			changed: new Date()
+		}
+	});
+
+	var	savedTempIds = req.body.newItems.map(function(item) {
+		return item._id;
+	});
+
+	db.insert(newItems, function(err, insertedItems) {
+		console.log("Inserted items", insertedItems);
+
+		socker.sendToAll("newItems", insertedItems);
+		res.json(savedTempIds);
+	});
+
+});
 app.use("/sockerClient.js", express.static(__dirname + '/../Socker/sockerClient.js'));
 app.use(express.static('public'));
 
@@ -56,14 +82,6 @@ socker.init(server, {
 	allowedProtocol: config.websocket.allowedProtocol
 });
 
-socker.on("addItem", function(connection, data, type) {
-	console.log("adda!", data);
-	db.insert({name:data.name, added: new Date()}, function(err, item) {
-		if(err) throw "error saving item";
-		if(data._id) item.tempId = data._id;
-		socker.sendToAll("newItem", item);
-	});
-});
 
 socker.on("itemDelete", function(connection, data, type) {
 	db.remove({_id: data.id}, function(err) {

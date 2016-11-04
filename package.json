@@ -1,9 +1,8 @@
 {
   "name": "handla",
-  "version": "1.0.0",
-  "description": "",
   "main": "server/app.js",
   "dependencies": {
+    "body-parser": "^1.15.2",
     "browserify": "^13.1.0",
     "express": "^4.14.0",
     "nedb": "^1.8.0",
@@ -12,7 +11,9 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-js": "browserify client/js/main.js -o public/script.js"
+    "build-client-js": "browserify client/js/main.js -o public/script.js",
+    "build-sw-js": "browserify client/js/sw.js -o public/sw.js",
+    "build-js": "npm run build-client-js && npm run build-sw-js"
   },
   "private": true
 }

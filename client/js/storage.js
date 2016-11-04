@@ -113,7 +113,7 @@ class IDB {
 		});
 	}
 
-	update(storeName, id, data) {
+	update(storeName, data) {
 		return this.open().then(function(db) {
 			return new Promise(function(resolve, reject) {
 				var transaction = db.transaction(storeName, "readwrite");
@@ -129,4 +129,8 @@ class IDB {
 			});
 		});
 	}
+}
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = IDB;
 }

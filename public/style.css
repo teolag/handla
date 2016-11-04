@@ -1,6 +1,6 @@
 body {
 	background-color: #b1c2c7;
-	font: 16px 'Roboto Condensed', sans-serif;
+	font: 16px sans-serif;
 }
 
 button, input, select, textarea {
@@ -68,6 +68,9 @@ button, input, select, textarea {
 
 .shopping-list-item.local {
 	color: #1234f3;
+}
+.shopping-list-item.deleted {
+	background-color: rgba(255, 255, 255, 0.3);
 }
 
 .shopping-list-item label {

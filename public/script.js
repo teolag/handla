@@ -3,7 +3,8 @@ module.exports = {
 	websocket: {
 		url: 'wss://localhost:55555',
 		protocol: 'handla'
-	}
+	},
+	storageName: 'items'
 };
 
 },{}],2:[function(require,module,exports){
@@ -11,28 +12,30 @@ module.exports = {
 	var socker = require("xio-socker");
 	var list;
 	var items = [];
+	var config = require("./config");
+	var storage;
 
-	function init() {
+	function init(storageClass) {
+		storage = storageClass;
 		list = document.querySelector(".shopping-list");
 		list.addEventListener("change", listChange, false);
 		list.addEventListener("click", listClick, false);
 
 		socker.on("allItems", allItemsCallback);
 		socker.on("newItem", newItemCallback);
-		loadCachedList();
-		sendAllLocalItems();
+		refreshList();
 	}
 
+	function allItemsCallback(items) {
+		console.log("AllItemsFromServer", items);
 
-	function sendAllLocalItems() {
-		console.log("any local items?");
-		items.filter(function(item) {
-			return item.localOnly;
-		}).forEach(function(item) {
-			console.log("send local", item);
-			socker.send("addItem", item);
+		items.forEach(item => {
+
 		});
+
 	}
+
+	
 
 
 	function listChange(e) {
@@ -49,36 +52,27 @@ module.exports = {
 	}
 
 	function listClick(e) {
-		//console.log("listClick", e);
-
 		if(e.target.className === "delete-item") {
-			var itemId = e.target.parentElement.dataset.id;
-			socker.send("itemDelete", {id:itemId});
-			e.target.parentElement.classList.add("delete");
+			var elem = e.target;
+			var storageId = parseInt(elem.parentElement.dataset.storageId);
+			
+			storage.get(config.storageName, storageId).then(function(item) {
+				if(item.localOnly) {
+					storage.delete(config.storageName, storageId).then(function(e) {
+						elem.parentElement.classList.add("delete");
+					});
+				} else {
+					item.deleted = true;
+					storage.update(config.storageName, item).then(function(e) {
+						console.log("deleted flag set", e);
+						notifyServiceWorker();
+						refreshList();
+					});
+				}
+			});
 		}
-
 	}
 
-
-	function loadCachedList() {
-		var cachedList = JSON.parse(localStorage.getItem("items"));
-		if(cachedList) {
-			items = cachedList;
-			refreshList();
-		}
-	}
-
-	function saveCacheList() {
-		localStorage.setItem("items", JSON.stringify(items));
-	}
-
-
-
-	function allItemsCallback(it) {
-		items = it;
-		saveCacheList();
-		refreshList();
-	}
 
 	function newItemCallback(item) {
 		var localItem = items.find(function(local) {
@@ -92,57 +86,55 @@ module.exports = {
 			items.push(item);
 		}
 
-		saveCacheList()
 		refreshList();
 	}
 
 	function refreshList() {
-		list.innerHTML = "";
-		items.sort(sortByName);
-		items.forEach(createListItem);
-	}
-
-	function createListItem(item, i) {
-		var li = document.createElement("li"),
-			label = document.createElement("label"),
-			checkbox = document.createElement("input"),
-			nameSpan = document.createElement("span"),
-			deleteButton = document.createElement("button");
-		checkbox.type = "checkbox";
-		checkbox.name = item._id;
-		checkbox.id = "item_"+item._id;
-		if(item.checked) checkbox.checked="checked";
-		label.setAttribute("for", "item_"+item._id);
-		label.innerHTML = "&#10003;";
-		nameSpan.textContent = item.name;
-		nameSpan.className = "name";
-		deleteButton.textContent = "x";
-		deleteButton.className = "delete-item";
-		li.dataset.id = item._id;
-		li.className = "shopping-list-item";
-		li.appendChild(checkbox);
-		li.appendChild(label);
-		li.appendChild(nameSpan);
-		li.appendChild(deleteButton);
-
-		if(item.localOnly) li.classList.add("local");
-		list.appendChild(li);
+		storage.getAll(config.storageName).then(function(items) {
+			list.innerHTML = items.sort(sortByName).map(function(item) {
+				var elemId = "item_"+item._id;
+				var itemClasses = "shopping-list-item";
+				if(item.localOnly) itemClasses += " local";
+				if(item.deleted) itemClasses += " deleted";
+				return `<li class="${itemClasses}" data-storage-id="${item.id}">
+							<label for="${elemId}">&#10003;</label>
+							<input type="checkbox" name="${item._id}" id="${elemId}" />
+							<span class="name">${item.name}</span>
+							<button type="button" class="delete-item">x</button>
+						</li>`;
+			}).join("");
+		});
 	}
 
 	function addItem(name) {
-		var tempId = "temp"+(+new Date());
+		var tempId = -(+new Date());
 		var item = {name: name, _id:tempId, localOnly:true};
-		items.push(item);
-		socker.send("addItem", item);
-		saveCacheList();
-		refreshList(); 
+		console.log("Save item:", item);
+		storage.save(config.storageName, item)
+			.then(function(e) {
+				console.log("Saved to idb", item);
+				refreshList(); 
+				notifyServiceWorker();
+			});
+	}
+
+	function notifyServiceWorker() {
+		console.log("wanna synk");
+		navigator.serviceWorker.ready
+			.then(function(registration) {
+				return registration.sync.register('itemsToSync')})
+			.then(function() {
+				console.log("synk scheduled...");
+			});
 	}
 
 
 	function sortByName(a, b) {
-		if(a.name > b.name) {
+		let n1 = a.name.toLowerCase(),
+			n2 = b.name.toLowerCase();
+		if(n1 > n2) {
 			return 1;
-		} else if(a.name < b.name) {
+		} else if(n1 < n2) {
 			return -1;
 		}
 		return 0;
@@ -150,12 +142,15 @@ module.exports = {
 
 	exports.init = init;
 	exports.add = addItem;
+	exports.sync = notifyServiceWorker;
+	exports.refresh = refreshList;
 	
 }(typeof exports === 'undefined'? this['ItemList']={}: exports));
-},{"xio-socker":4}],3:[function(require,module,exports){
+},{"./config":1,"xio-socker":5}],3:[function(require,module,exports){
 var socker = require("xio-socker");
 var ItemList = require("./item_list");
 var config = require("./config");
+var IDB = require("./storage");
 
 if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('sw.js')
@@ -209,18 +204,15 @@ if ('serviceWorker' in navigator) {
 	var updateReady = function(worker) {
 		console.log("Update ready!");
 		worker.postMessage({action: 'skipWaiting'});
-
-		/*
-		var toast = this._toastsView.show("New version available", {
-			buttons: ['refresh', 'dismiss']
-		});
-
-		toast.answer.then(function(answer) {
-			if (answer != 'refresh') return;
-			worker.postMessage({action: 'skipWaiting'});
-		});
-		*/
 	};
+
+	navigator.serviceWorker.onmessage = function(e) {
+		console.log("Message form SW", e);
+		if(e.data === "updateList") {
+			ItemList.refresh();
+		}
+	}
+
 }
 
 
@@ -270,7 +262,21 @@ var ConnectionStatus = (function() {
 }());
 
 
-ItemList.init();
+var storage = new IDB("handla", 1, storageUpdate);
+var storageName = 'items';
+function storageUpdate(e) {
+	console.log("Upgrading db");
+
+	var db = e.target.result;
+	if(!db.objectStoreNames.contains(storageName)) {
+		var objectStore = db.createObjectStore(storageName, {keyPath: "id", autoIncrement:true});
+		objectStore.createIndex("name", "name", {unique: false});
+		objectStore.createIndex("_id", "_id", {unique: true});
+	}
+}
+
+
+ItemList.init(storage);
 connectToWebsocket();
 
 
@@ -357,7 +363,144 @@ function show(elem) {
 function hide(elem) {
 	elem.style.display = "none";
 }
-},{"./config":1,"./item_list":2,"xio-socker":4}],4:[function(require,module,exports){
+},{"./config":1,"./item_list":2,"./storage":4,"xio-socker":5}],4:[function(require,module,exports){
+class IDB {
+
+	constructor(name, version, upgradeCallback) {
+		this.name = name;
+		this.version = version;
+		this.upgradeCallback = upgradeCallback;
+	}
+
+	open() {
+		let that = this;
+		return new Promise(function(resolve, reject) {
+			if(that.db) resolve(that.db);
+
+			var openRequest = indexedDB.open(that.name, that.version);
+			openRequest.onupgradeneeded = that.upgradeCallback;
+
+			openRequest.onsuccess = function(e) {
+				that.db = e.target.result;
+				resolve(that.db);
+			}
+
+			openRequest.onerror = function(e) {
+				reject(e);
+			}
+		});
+	}
+
+	save(storeName, data) {
+		return this.open().then(function(db) {
+			return new Promise(function(resolve, reject) {
+
+				var transaction = db.transaction([storeName],"readwrite");
+				var store = transaction.objectStore(storeName);
+
+				var request = store.add(data);
+
+				request.onerror = function(e) {
+					reject(e);
+				}
+
+				request.onsuccess = function(e) {
+					resolve(e.target.result);
+				}
+			});
+		});
+	}
+
+	getAll(storeName, index) {
+		return this.open().then(function(db) {
+			return new Promise(function(resolve, reject) {
+				var items = [];
+				var transaction = db.transaction(storeName, "readonly");
+				var store = transaction.objectStore(storeName);
+
+				if(index) {
+					let storeIndex = store.index(index);
+					var cursorRequest = storeIndex.openCursor();
+				} else {
+					var cursorRequest = store.openCursor();
+				}
+
+
+				transaction.oncomplete = function(evt) {
+					resolve(items);
+				};
+
+				cursorRequest.onerror = function(error) {
+					reject(error);
+				};
+
+				cursorRequest.onsuccess = function(evt) {
+					var cursor = evt.target.result;
+					if (cursor) {
+						items.push(cursor.value);
+						cursor.continue();
+					}
+				};
+			});
+		});
+	}
+
+	get(storeName, id) {
+		return this.open().then(function(db) {
+			return new Promise(function(resolve, reject) {
+				var transaction = db.transaction(storeName, "readonly");
+				var store = transaction.objectStore(storeName);
+
+				var request = store.get(id);
+				request.onsuccess = function(e) {
+					resolve(e.target.result);
+				};
+				request.onerror = function(err) {
+					reject(err);
+				};
+			});
+		});
+	}
+
+	delete(storeName, id) {
+		return this.open().then(function(db) {
+			return new Promise(function(resolve, reject) {
+				var transaction = db.transaction(storeName, "readwrite");
+				var store = transaction.objectStore(storeName);
+
+				var request = store.delete(id);
+				request.onsuccess = function(e) {
+					resolve(e);
+				};
+				request.onerror = function(err) {
+					reject(err);
+				};
+			});
+		});
+	}
+
+	update(storeName, data) {
+		return this.open().then(function(db) {
+			return new Promise(function(resolve, reject) {
+				var transaction = db.transaction(storeName, "readwrite");
+				var store = transaction.objectStore(storeName);
+
+				var request = store.put(data);
+				request.onsuccess = function(e) {
+					resolve(e);
+				};
+				request.onerror = function(err) {
+					reject(err);
+				};
+			});
+		});
+	}
+}
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = IDB;
+}
+},{}],5:[function(require,module,exports){
 var socker = (function() {
 	var socket,
 		connected = false,

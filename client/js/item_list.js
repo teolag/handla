@@ -2,28 +2,30 @@
 	var socker = require("xio-socker");
 	var list;
 	var items = [];
+	var config = require("./config");
+	var storage;
 
-	function init() {
+	function init(storageClass) {
+		storage = storageClass;
 		list = document.querySelector(".shopping-list");
 		list.addEventListener("change", listChange, false);
 		list.addEventListener("click", listClick, false);
 
 		socker.on("allItems", allItemsCallback);
 		socker.on("newItem", newItemCallback);
-		loadCachedList();
-		sendAllLocalItems();
+		refreshList();
 	}
 
+	function allItemsCallback(items) {
+		console.log("AllItemsFromServer", items);
 
-	function sendAllLocalItems() {
-		console.log("any local items?");
-		items.filter(function(item) {
-			return item.localOnly;
-		}).forEach(function(item) {
-			console.log("send local", item);
-			socker.send("addItem", item);
+		items.forEach(item => {
+
 		});
+
 	}
+
+	
 
 
 	function listChange(e) {
@@ -40,36 +42,27 @@
 	}
 
 	function listClick(e) {
-		//console.log("listClick", e);
-
 		if(e.target.className === "delete-item") {
-			var itemId = e.target.parentElement.dataset.id;
-			socker.send("itemDelete", {id:itemId});
-			e.target.parentElement.classList.add("delete");
+			var elem = e.target;
+			var storageId = parseInt(elem.parentElement.dataset.storageId);
+			
+			storage.get(config.storageName, storageId).then(function(item) {
+				if(item.localOnly) {
+					storage.delete(config.storageName, storageId).then(function(e) {
+						elem.parentElement.classList.add("delete");
+					});
+				} else {
+					item.deleted = true;
+					storage.update(config.storageName, item).then(function(e) {
+						console.log("deleted flag set", e);
+						notifyServiceWorker();
+						refreshList();
+					});
+				}
+			});
 		}
-
 	}
 
-
-	function loadCachedList() {
-		var cachedList = JSON.parse(localStorage.getItem("items"));
-		if(cachedList) {
-			items = cachedList;
-			refreshList();
-		}
-	}
-
-	function saveCacheList() {
-		localStorage.setItem("items", JSON.stringify(items));
-	}
-
-
-
-	function allItemsCallback(it) {
-		items = it;
-		saveCacheList();
-		refreshList();
-	}
 
 	function newItemCallback(item) {
 		var localItem = items.find(function(local) {
@@ -83,57 +76,55 @@
 			items.push(item);
 		}
 
-		saveCacheList()
 		refreshList();
 	}
 
 	function refreshList() {
-		list.innerHTML = "";
-		items.sort(sortByName);
-		items.forEach(createListItem);
-	}
-
-	function createListItem(item, i) {
-		var li = document.createElement("li"),
-			label = document.createElement("label"),
-			checkbox = document.createElement("input"),
-			nameSpan = document.createElement("span"),
-			deleteButton = document.createElement("button");
-		checkbox.type = "checkbox";
-		checkbox.name = item._id;
-		checkbox.id = "item_"+item._id;
-		if(item.checked) checkbox.checked="checked";
-		label.setAttribute("for", "item_"+item._id);
-		label.innerHTML = "&#10003;";
-		nameSpan.textContent = item.name;
-		nameSpan.className = "name";
-		deleteButton.textContent = "x";
-		deleteButton.className = "delete-item";
-		li.dataset.id = item._id;
-		li.className = "shopping-list-item";
-		li.appendChild(checkbox);
-		li.appendChild(label);
-		li.appendChild(nameSpan);
-		li.appendChild(deleteButton);
-
-		if(item.localOnly) li.classList.add("local");
-		list.appendChild(li);
+		storage.getAll(config.storageName).then(function(items) {
+			list.innerHTML = items.sort(sortByName).map(function(item) {
+				var elemId = "item_"+item._id;
+				var itemClasses = "shopping-list-item";
+				if(item.localOnly) itemClasses += " local";
+				if(item.deleted) itemClasses += " deleted";
+				return `<li class="${itemClasses}" data-storage-id="${item.id}">
+							<label for="${elemId}">&#10003;</label>
+							<input type="checkbox" name="${item._id}" id="${elemId}" />
+							<span class="name">${item.name}</span>
+							<button type="button" class="delete-item">x</button>
+						</li>`;
+			}).join("");
+		});
 	}
 
 	function addItem(name) {
-		var tempId = "temp"+(+new Date());
+		var tempId = -(+new Date());
 		var item = {name: name, _id:tempId, localOnly:true};
-		items.push(item);
-		socker.send("addItem", item);
-		saveCacheList();
-		refreshList(); 
+		console.log("Save item:", item);
+		storage.save(config.storageName, item)
+			.then(function(e) {
+				console.log("Saved to idb", item);
+				refreshList(); 
+				notifyServiceWorker();
+			});
+	}
+
+	function notifyServiceWorker() {
+		console.log("wanna synk");
+		navigator.serviceWorker.ready
+			.then(function(registration) {
+				return registration.sync.register('itemsToSync')})
+			.then(function() {
+				console.log("synk scheduled...");
+			});
 	}
 
 
 	function sortByName(a, b) {
-		if(a.name > b.name) {
+		let n1 = a.name.toLowerCase(),
+			n2 = b.name.toLowerCase();
+		if(n1 > n2) {
 			return 1;
-		} else if(a.name < b.name) {
+		} else if(n1 < n2) {
 			return -1;
 		}
 		return 0;
@@ -141,5 +132,7 @@
 
 	exports.init = init;
 	exports.add = addItem;
+	exports.sync = notifyServiceWorker;
+	exports.refresh = refreshList;
 	
 }(typeof exports === 'undefined'? this['ItemList']={}: exports));
