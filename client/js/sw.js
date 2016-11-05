@@ -1,7 +1,7 @@
 var IDB = require("./storage.js");
 var storage = new IDB("handla", 1, function(e) {console.log("update idb from sw", e)});
 
-const cacheName = 'version_21';
+const cacheName = 'version_22';
 
 const cachedFiles = [
 	'/',
@@ -43,21 +43,21 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('fetch', e => {
-	console.log("fetcha", e.request.url);
+	//console.log("fetcha", e.request.url);
 	e.respondWith(
 		caches.match(e.request).then(function(response) {
 			if(response) {
-				console.log("get from cache", response.url);
+				//console.log("get from cache", response.url);
 				return response;
 			}
-			console.log("get from server", e.request.url);
+			//console.log("get from server", e.request.url);
 			return fetch(e.request);
 		})
 	);
 });
 
 self.addEventListener('sync', e => {
-	console.log("SYNC", e);
+	console.log("SYNC!");
 	if (e.tag == 'itemsToSync') {
 		e.waitUntil(sync());
 	}
@@ -70,11 +70,14 @@ self.addEventListener('sync', e => {
 			.catch(err => console.log("Error syncing", err));
 
 		function postItemsToSync(items) {
-			console.log("fetch post items", items);
-
 			var newItems = items.filter(item => item.localOnly && !item.deleted);
-			var deletedItems = items.filter(item => !item.localOnly && item.deleted);
-			var data = {newItems: newItems, deletedItems: deletedItems};
+			var itemIdsToDelete = items
+				.filter(item => !item.localOnly && item.deleted)
+				.map(item => item._id);
+			var data = {newItems: newItems, itemIdsToDelete: itemIdsToDelete};
+
+			console.log(newItems.length, "new items");
+			console.log(itemIdsToDelete.length, "items to delete");
 
 			return fetch('/syncItems', {
 				method: 'POST',
@@ -83,20 +86,31 @@ self.addEventListener('sync', e => {
 			});
 		}
 
-		function handleServerResponse(savedTempIds) {
-			console.log("server response", savedTempIds);
+		function handleServerResponse(data) {
+			console.log("server response after sync", data);
 
 			storage.getAll("items", "_id").then(items => {
-				items.forEach(item => {
-					if(savedTempIds.indexOf(item._id) > -1) {
-						storage.delete("items", item.id);
+				items
+					.filter(item => {
+						return data.savedTempIds.indexOf(item._id) > -1 ||
+							data.deletedIds.indexOf(item._id) > -1;
+					})
+					.forEach((item, i, arr) => {
+						storage.delete("items", item.id).then(function() {
+							if(i === arr.length-1) {
+								console.log("last delete complete!");
+								notifyClientsToRefresh();
+							}
+						});
 					}
-				});
+				);
 			});
+		}
 
-			console.log("temp items deleted, send message to clients", self.clients);
-
+		function notifyClientsToRefresh() {
 			self.clients.matchAll().then(function(clients) {
+				console.log("temp items deleted, send message to", clients.length, "clients");
+
 	            clients.forEach(function(client) {
 	            	console.log("send message to client", client);
 	                client.postMessage("updateList");

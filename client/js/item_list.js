@@ -12,16 +12,35 @@
 		list.addEventListener("click", listClick, false);
 
 		socker.on("allItems", allItemsCallback);
-		socker.on("newItem", newItemCallback);
+		socker.on("newItems", newItemsCallback);
 		refreshList();
 	}
 
-	function allItemsCallback(items) {
-		console.log("AllItemsFromServer", items);
+	function allItemsCallback(serverItems) {
+		console.log("AllItemsFromServer", serverItems);
 
-		items.forEach(item => {
+		storage.getAll("items", "_id").then(items => {
+			var existingIds = items.map(item => item._id);
+			var itemsToAdd = serverItems.filter(item => {
+				return existingIds.indexOf(item._id) === -1;
+			});
 
+			/*
+				STORAGE CAN ONLY SAVE ONE ITEM AT A TIME
+				Promisify save and create an array of saves 
+				then run Promise.all(array) to save all at once
+				ONLY one db.open and get store!!
+			*/
+
+			itemsToAdd.forEach((item, i) => {
+				storage.save("items", item).then(id => {
+					if(i === itemsToAdd.length-1) refreshList();
+				});
+			});
+			
 		});
+		
+
 
 	}
 
@@ -64,22 +83,17 @@
 	}
 
 
-	function newItemCallback(item) {
-		var localItem = items.find(function(local) {
-			return local._id === item.tempId && local.localOnly;
+	function newItemsCallback(newItems) {
+		newItems.forEach((newItem, i) => {
+			storage.save("items", newItem).then(item => {
+				console.log("new item saved", item);
+				if(i === newItems.length-1) refreshList();
+			});
 		});
-		if(localItem) {
-			console.log("local item saved to db", item);
-			localItem.localOnly = false;
-			localItem._id = item._id;
-		} else {
-			items.push(item);
-		}
-
-		refreshList();
 	}
 
 	function refreshList() {
+		console.log("Refresh list");
 		storage.getAll(config.storageName).then(function(items) {
 			list.innerHTML = items.sort(sortByName).map(function(item) {
 				var elemId = "item_"+item._id;

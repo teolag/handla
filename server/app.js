@@ -30,7 +30,7 @@ var fs = require('fs'),
     app = express(),
     config = require('./config'),
     socker = require('xio-socker'),
-	Datastore = require('nedb'),
+	Datastore = require('nedb-promise'),
 	bodyParser = require('body-parser'),
   	db = new Datastore({ filename: 'server/item_store', autoload: true }),
     options = {
@@ -64,13 +64,22 @@ app.post("/syncItems", function(req, res) {
 	var	savedTempIds = req.body.newItems.map(function(item) {
 		return item._id;
 	});
+	
 
-	db.insert(newItems, function(err, insertedItems) {
+	var insertPromise = db.insert(newItems).then(function(insertedItems) {
 		console.log("Inserted items", insertedItems);
-
 		socker.sendToAll("newItems", insertedItems);
-		res.json(savedTempIds);
 	});
+
+	var itemIdsToDelete = req.body.itemIdsToDelete;
+	console.log("remova", itemIdsToDelete);
+	var deletePromise = db.remove({ _id: {$in: itemIdsToDelete}}, {multi: true});
+
+	Promise.all([insertPromise, deletePromise]).then(function(returns) {
+		console.log("Both completed", returns);
+		res.json({savedTempIds: savedTempIds, deletedIds: itemIdsToDelete});
+	});
+
 
 });
 app.use("/sockerClient.js", express.static(__dirname + '/../Socker/sockerClient.js'));
@@ -101,7 +110,9 @@ socker.on("itemChecked", function(connection, data, type) {
 
 
 function userConnected(con) {
-	db.find({}, function (err, docs) {
+	console.log("User connected");
+	db.find({}).then(function(docs) {
+		console.log("Send all items to user", docs);
 		socker.sendTo(con, "allItems", docs);
 	});
 }

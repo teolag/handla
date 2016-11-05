@@ -58,7 +58,7 @@ if ('serviceWorker' in navigator) {
 	};
 
 	navigator.serviceWorker.onmessage = function(e) {
-		console.log("Message form SW", e);
+		console.log("Message form SW:", e.data);
 		if(e.data === "updateList") {
 			ItemList.refresh();
 		}
