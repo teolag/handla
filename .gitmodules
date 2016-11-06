@@ -1,4 +1,0 @@
-[submodule "Socker"]
-	path = Socker
-	url = git@github.com:teolag/Socker.git
-	ignore = dirty
