@@ -6,7 +6,10 @@ const cacheName = 'version_22';
 const cachedFiles = [
 	'/',
 	'script.js',
-	'style.css'
+	'style.css',
+	'icon/basket_256.png',
+	'icon/basket_64.png',
+	'icon/basket.svg'
 ];
 
 self.addEventListener('activate', e => {

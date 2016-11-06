@@ -1,0 +1,10 @@
+
+Page land
+--------------------------
+Show items from indexedDB
+Connect to websocket
+	If connected:
+	Get list of all items from server
+		Convert all temp items that now is saved on server
+		Add all items not exists in indexedDB
+		Remove all local items that do not exist on server
