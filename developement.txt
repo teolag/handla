@@ -1,6 +1,21 @@
+Hmm...
+
+Alla förändringar skickas med websocket
+	är clienten inte connectad skickas en snapshot vid connect (page load eller websocket reconnect)
+
+Websocket uppdateringar uppdaterar indexeddb
+Snapshot uppdaterar indexeddb
+
+reload av listan går genom alla items, en efter en och utför ändringar vackert
+
+
+
+
+
+
 
 Page land
---------------------------
+-----------------------------
 Show items from indexedDB
 Connect to websocket
 	If connected:
@@ -8,3 +23,21 @@ Connect to websocket
 		Convert all temp items that now is saved on server
 		Add all items not exists in indexedDB
 		Remove all local items that do not exist on server
+	Show items from indexedDB
+
+
+
+Add new item
+-----------------------------
+Save new item to indexedDB, _id < 0  and localOnly: true
+Show items from indexedDB
+Notify Service Worker to send new items
+
+
+
+Service Worker executes sync
+-----------------------------
+Send lists of all:
+	deletes (deleted && !localOnly)
+	changes (changed)
+	new items (localOnly && !deleted)

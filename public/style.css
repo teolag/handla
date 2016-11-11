@@ -1,6 +1,8 @@
 body {
 	background-color: #b1c2c7;
 	font: 16px sans-serif;
+	margin: 0;
+	color: #444;
 }
 
 button, input, select, textarea {
@@ -9,32 +11,37 @@ button, input, select, textarea {
 
 
 
-.connection-status {
-	position: fixed;
-	top: 0.5em;
-	right: 0.5em;
+header {
+	background-color: white;
+	display: flex;
 	padding: 0.5em;
-	opacity: 0.5;
-	color: white;
-}
-.connection-status.online {
-	background-color: #0f0;
-}
-.connection-status.offline {
-	background-color: #f00;
-}
-.connection-status.connecting {
-	background-color: #831;
-}
-.connection-status.server-down {
-	background-color: #f00;
+	justify-content: space-between;
+	align-items: center;
 }
 
+h1 {
+	margin: 0;
+}
+
+
+
+
+.icon {
+	width: 2rem;
+	height: 2rem;
+}
+
+
+.connection-status {
+	fill: #aaa;
+}
 
 
 
 .shopping-list-area {
 	overflow: auto;
+	margin: 0 auto;
+	max-width: 40em;
 }
 
 .shopping-list {
@@ -122,20 +129,32 @@ button, input, select, textarea {
 	bottom: 1em;
 	right: 1em;
 	background-color: #ca35b0;
-	color: white;
 	border: 0;
-	width: 4rem;
-	height: 4rem;
-	font-size: 2em;
 	cursor: pointer;
+	padding: 1em;
+	display: flex;
+	fill: #f7e0f3;
 }
 
 .button-new-item:hover {
 	background-color: #ef5fd5;
+	fill: #fff;
 }
 
 
 
+.button-delete-item {
+	border: 0;
+	background-color: transparent;
+	display: flex;
+	padding: 0;
+	fill: #859ca2;
+}
+
+.button-delete-item:hover {
+	cursor: pointer;
+	fill: #000;
+}
 
 
 

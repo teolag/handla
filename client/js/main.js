@@ -6,11 +6,9 @@ var IDB = require("./storage");
 if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('sw.js')
 		.then(function(registration) {
-			console.log('Service worker registered : ', registration.scope);
-
+			
 			// no service worker active, first visit
 			if (!navigator.serviceWorker.controller) {
-				console.log("first visit?");
 				return;
 			}
 
@@ -69,46 +67,20 @@ if ('serviceWorker' in navigator) {
 
 var ConnectionStatus = (function() {
 	var elem = document.querySelector(".connection-status"),
-		defaultClassName = elem.className;
-
-		setOffline = function() {
-			resetClassName();
-			elem.textContent = "Offline";
-			elem.classList.add("offline");
+		
+		hideAll = function() {
+			Array.from(elem.children).forEach(div => {
+				div.setAttribute("hidden","");
+			});
 		},
 
-		setOnline = function() {
-			resetClassName();
-			elem.textContent = "Online";
-			elem.classList.add("online");
-		},
-		setConnecting = function() {
-			resetClassName();
-			elem.textContent = "Connecting";
-			elem.classList.add("connecting");
-		},
-		setConnectingCountdown = function(s) {
-			resetClassName();
-			elem.textContent = "Retry in " + s + " seconds";
-			elem.classList.add("waiting");
-		},
-
-		setServerDown = function() {
-			resetClassName();
-			elem.textContent = "Server down";
-			elem.classList.add("server-down");
-		},
-
-		resetClassName = function() {
-			elem.className = defaultClassName;
+		setStatus = function(status) {
+			hideAll();
+			elem.querySelector('.' + status).removeAttribute("hidden");
 		};
 
 	return {
-		setOffline: setOffline,
-		setOnline: setOnline,
-		setConnecting: setConnecting,
-		setConnectingCountdown: setConnectingCountdown,
-		setServerDown: setServerDown
+		setStatus: setStatus
 	}
 }());
 
@@ -161,29 +133,30 @@ function updateOnlineStatus(event) {
     if(navigator.onLine) {
     	if(socker.connected()) {
     		console.log("online again, websocket still active");
-    		ConnectionStatus.setOnline();
+    		ConnectionStatus.setStatus("online");
     	} else {
     		console.log("online again, reconnect to websocket");
     		connectToWebsocket();
     	}
     } else {
     	console.log("offline");
-    	ConnectionStatus.setOffline();
+    	ConnectionStatus.setStatus("offline");
     }
 }
 
 
 function connectToWebsocket() {
-	ConnectionStatus.setConnecting();
+	ConnectionStatus.setStatus("connecting")
 	socker.connect(config.websocket.url, config.websocket.protocol, websocketConnected, websocketClosed, websocketError);
 }
 function websocketConnected(e) {
 	console.log("connected to websocket", e);
-	ConnectionStatus.setOnline();
+	ConnectionStatus.setStatus("online");
+	socker.send("getAllItems");
 }
 function websocketClosed(e) {
 	console.log("websocket closed", e);
-	ConnectionStatus.setServerDown();
+	ConnectionStatus.setStatus("offline");
 
 	/*
 	var countdown = 10;
@@ -192,7 +165,7 @@ function websocketClosed(e) {
 			clearInterval(counter);
 			connectToWebsocket();
 		}
-		ConnectionStatus.setConnectingCountdown(countdown--);
+		ConnectionStatus.setStatus("connecting");
 	}, 1000);
 	*/
 

@@ -18,8 +18,8 @@ module.exports = {
 	function init(storageClass) {
 		storage = storageClass;
 		list = document.querySelector(".shopping-list");
-		list.addEventListener("change", listChange, false);
-		list.addEventListener("click", listClick, false);
+		list.addEventListener("change", onListChange, false);
+		list.addEventListener("click", onListClick, false);
 
 		socker.on("allItems", allItemsCallback);
 		socker.on("newItems", newItemsCallback);
@@ -36,6 +36,7 @@ module.exports = {
 			});
 
 			/*
+				TODO:
 				STORAGE CAN ONLY SAVE ONE ITEM AT A TIME
 				Promisify save and create an array of saves 
 				then run Promise.all(array) to save all at once
@@ -47,49 +48,54 @@ module.exports = {
 					if(i === itemsToAdd.length-1) refreshList();
 				});
 			});
-			
 		});
-		
-
-
 	}
 
 	
-
-
-	function listChange(e) {
+	function onListChange(e) {
 		console.log("listChange", e);
-		var itemId = e.target.name;
+		var elem = e.target;
+		var storageId = parseInt(elem.parentElement.dataset.storageId);
 
-		var item = items.find(function(item) {
-			return item._id === itemId;
+		storage.get(config.storageName, storageId).then(function(item) {
+			item.checked = elem.checked;
+			storage.update(config.storageName, item).then(function() {
+				notifyServiceWorker();
+				refreshList();
+			});
 		});
-		if(item) {
-			item.checked = e.target.checked;
-			socker.send("itemChecked", {id:itemId, checked:item.checked});
+	}
+
+
+	function onListClick(e) {
+		console.log("list click", e.target);
+
+		var elem = e.target;
+		while(elem !== list) {
+			if(elem.className === "button-delete-item") {
+				var storageId = parseInt(elem.parentElement.dataset.storageId);
+				deleteItem(storageId);
+			}
+			elem = elem.parentElement;
 		}
 	}
 
-	function listClick(e) {
-		if(e.target.className === "delete-item") {
-			var elem = e.target;
-			var storageId = parseInt(elem.parentElement.dataset.storageId);
-			
-			storage.get(config.storageName, storageId).then(function(item) {
-				if(item.localOnly) {
-					storage.delete(config.storageName, storageId).then(function(e) {
-						elem.parentElement.classList.add("delete");
-					});
-				} else {
-					item.deleted = true;
-					storage.update(config.storageName, item).then(function(e) {
-						console.log("deleted flag set", e);
-						notifyServiceWorker();
-						refreshList();
-					});
-				}
-			});
-		}
+	function deleteItem(storageId) {
+		var elem = list.querySelector(".shopping-list-item[data-storage-id='"+storageId+"']");
+		storage.get(config.storageName, storageId).then(function(item) {
+			if(item.localOnly) {
+				storage.delete(config.storageName, storageId).then(function(e) {
+					elem.parentElement.classList.add("delete");
+				});
+			} else {
+				item.deleted = true;
+				storage.update(config.storageName, item).then(function(e) {
+					console.log("deleted flag set", e);
+					notifyServiceWorker();
+					refreshList();
+				});
+			}
+		});
 	}
 
 
@@ -102,35 +108,47 @@ module.exports = {
 		});
 	}
 
+
 	function refreshList() {
 		console.log("Refresh list");
 		storage.getAll(config.storageName).then(function(items) {
-			list.innerHTML = items.sort(sortByName).map(function(item) {
-				var elemId = "item_"+item._id;
-				var itemClasses = "shopping-list-item";
-				if(item.localOnly) itemClasses += " local";
-				if(item.deleted) itemClasses += " deleted";
-				return `<li class="${itemClasses}" data-storage-id="${item.id}">
-							<label for="${elemId}">&#10003;</label>
-							<input type="checkbox" name="${item._id}" id="${elemId}" />
-							<span class="name">${item.name}</span>
-							<button type="button" class="delete-item">x</button>
-						</li>`;
-			}).join("");
+			list.innerHTML = items.sort(sortByName).map(getItemHTML).join("");
 		});
 	}
+
+
+	function getItemHTML(item) {
+		var elemId = "item_"+item._id;
+		var checked = item.checked ? "checked" : "";
+		var itemClasses = "shopping-list-item";
+		if(item.localOnly) itemClasses += " local";
+		if(item.deleted) itemClasses += " deleted";
+		return `
+			<li class="${itemClasses}" data-storage-id="${item.id}">
+				<input type="checkbox" name="${item._id}" id="${elemId}" ${checked} />
+				<label for="${elemId}">&#10003;</label>
+				<span class="name">${item.name}</span>
+				<button type="button" class="button-delete-item">
+					<svg class="icon icon-delete"><use xlink:href="/icon/icons.svg#icon-delete"></use></svg>
+				</button>
+			</li>
+		`;
+	}
+
 
 	function addItem(name) {
 		var tempId = -(+new Date());
 		var item = {name: name, _id:tempId, localOnly:true};
 		console.log("Save item:", item);
-		storage.save(config.storageName, item)
+		storage
+			.save(config.storageName, item)
 			.then(function(e) {
 				console.log("Saved to idb", item);
 				refreshList(); 
 				notifyServiceWorker();
 			});
 	}
+
 
 	function notifyServiceWorker() {
 		console.log("wanna synk");
@@ -169,11 +187,9 @@ var IDB = require("./storage");
 if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('sw.js')
 		.then(function(registration) {
-			console.log('Service worker registered : ', registration.scope);
-
+			
 			// no service worker active, first visit
 			if (!navigator.serviceWorker.controller) {
-				console.log("first visit?");
 				return;
 			}
 
@@ -232,46 +248,20 @@ if ('serviceWorker' in navigator) {
 
 var ConnectionStatus = (function() {
 	var elem = document.querySelector(".connection-status"),
-		defaultClassName = elem.className;
-
-		setOffline = function() {
-			resetClassName();
-			elem.textContent = "Offline";
-			elem.classList.add("offline");
+		
+		hideAll = function() {
+			Array.from(elem.children).forEach(div => {
+				div.setAttribute("hidden","");
+			});
 		},
 
-		setOnline = function() {
-			resetClassName();
-			elem.textContent = "Online";
-			elem.classList.add("online");
-		},
-		setConnecting = function() {
-			resetClassName();
-			elem.textContent = "Connecting";
-			elem.classList.add("connecting");
-		},
-		setConnectingCountdown = function(s) {
-			resetClassName();
-			elem.textContent = "Retry in " + s + " seconds";
-			elem.classList.add("waiting");
-		},
-
-		setServerDown = function() {
-			resetClassName();
-			elem.textContent = "Server down";
-			elem.classList.add("server-down");
-		},
-
-		resetClassName = function() {
-			elem.className = defaultClassName;
+		setStatus = function(status) {
+			hideAll();
+			elem.querySelector('.' + status).removeAttribute("hidden");
 		};
 
 	return {
-		setOffline: setOffline,
-		setOnline: setOnline,
-		setConnecting: setConnecting,
-		setConnectingCountdown: setConnectingCountdown,
-		setServerDown: setServerDown
+		setStatus: setStatus
 	}
 }());
 
@@ -324,29 +314,30 @@ function updateOnlineStatus(event) {
     if(navigator.onLine) {
     	if(socker.connected()) {
     		console.log("online again, websocket still active");
-    		ConnectionStatus.setOnline();
+    		ConnectionStatus.setStatus("online");
     	} else {
     		console.log("online again, reconnect to websocket");
     		connectToWebsocket();
     	}
     } else {
     	console.log("offline");
-    	ConnectionStatus.setOffline();
+    	ConnectionStatus.setStatus("offline");
     }
 }
 
 
 function connectToWebsocket() {
-	ConnectionStatus.setConnecting();
+	ConnectionStatus.setStatus("connecting")
 	socker.connect(config.websocket.url, config.websocket.protocol, websocketConnected, websocketClosed, websocketError);
 }
 function websocketConnected(e) {
 	console.log("connected to websocket", e);
-	ConnectionStatus.setOnline();
+	ConnectionStatus.setStatus("online");
+	socker.send("getAllItems");
 }
 function websocketClosed(e) {
 	console.log("websocket closed", e);
-	ConnectionStatus.setServerDown();
+	ConnectionStatus.setStatus("offline");
 
 	/*
 	var countdown = 10;
@@ -355,7 +346,7 @@ function websocketClosed(e) {
 			clearInterval(counter);
 			connectToWebsocket();
 		}
-		ConnectionStatus.setConnectingCountdown(countdown--);
+		ConnectionStatus.setStatus("connecting");
 	}, 1000);
 	*/
 

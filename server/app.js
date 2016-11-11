@@ -1,127 +1,27 @@
-/*
-
-Kommer in på sidan
-	Visa listan från local storage
-	Är vi online
-		JA: hämta senaste listan från servern
-			kolla om vi har något osyncat i local storage
-		NEJ:
-
-
-
-
-Lägga till ett item
-	Tryck på lägg till knappen
-	Itemet läggs till i arrayen men med en flagga, not synced
-	spara ner itemet i local storage
-	Har vi kontakt med servern?
-		JA: skicka ett tillägg
-			sätt flaggan till synced
-		NEJ: ----
-
-
-
-*/
-
-
-var fs = require('fs'),
-    https = require('https'),
-    express = require('express'),
-    app = express(),
-    config = require('./config'),
-    socker = require('xio-socker'),
-	Datastore = require('nedb-promise'),
-	bodyParser = require('body-parser'),
-  	db = new Datastore({ filename: 'server/item_store', autoload: true }),
-    options = {
-		cert: fs.readFileSync(config.cert),
-		key: fs.readFileSync(config.certKey)
-	};
-
-var server = https.createServer(options, app).listen(config.port, listenStart);
-process.on("exit", processEnded);
-
-
-var logger = function(req, res, next) {
-    console.log(req.method, "REQUEST", req.url);
-    next(); // Passing the request to the next handler in the stack.
-}
-
+var express = require('express');
+var app = express();
+var config = require('./config');
+var routes = require('./routes');
+var bodyParser = require('body-parser');
+    
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(logger); // Here you add your logger to the stack.
-app.post("/syncItems", function(req, res) {
-	console.log("synca items", req.body);
+app.use(logger);
+app.use(routes);
 
-	var newItems = req.body.newItems.map(function(item) {
-		return {
-			name: item.name,
-			added: new Date(), 
-			changed: new Date()
-		}
-	});
-
-	var	savedTempIds = req.body.newItems.map(function(item) {
-		return item._id;
-	});
-	
-
-	var insertPromise = db.insert(newItems).then(function(insertedItems) {
-		console.log("Inserted items", insertedItems);
-		socker.sendToAll("newItems", insertedItems);
-	});
-
-	var itemIdsToDelete = req.body.itemIdsToDelete;
-	console.log("remova", itemIdsToDelete);
-	var deletePromise = db.remove({ _id: {$in: itemIdsToDelete}}, {multi: true});
-
-	Promise.all([insertPromise, deletePromise]).then(function(returns) {
-		console.log("Both completed", returns);
-		res.json({savedTempIds: savedTempIds, deletedIds: itemIdsToDelete});
-	});
-
-
-});
-app.use("/sockerClient.js", express.static(__dirname + '/../Socker/sockerClient.js'));
-app.use(express.static('public'));
-
-socker.init(server, {
-	connectCallback: userConnected,
-	allowedOrigin: config.websocket.allowedOrigin,
-	allowedProtocol: config.websocket.allowedProtocol
-});
-
-
-socker.on("itemDelete", function(connection, data, type) {
-	db.remove({_id: data.id}, function(err) {
-		console.log("item removed", err);
-		socker.sendToAll("deletedItem", data.id);
-	});
-});
-
-socker.on("itemChecked", function(connection, data, type) {
-	db.update({_id: data.id}, {$set: {checked:data.checked}}, {}, function(err) {
-		console.log("item " + (data.checked? "checked": "unchecked"), err);
-		socker.sendToAll("checkedItem", data);
-	});
-});
+module.exports = app;
 
 
 
 
-function userConnected(con) {
-	console.log("User connected");
-	db.find({}).then(function(docs) {
-		console.log("Send all items to user", docs);
-		socker.sendTo(con, "allItems", docs);
-	});
-}
-
-function listenStart() {
-	console.log("listening on port " + config.port);
-}
 
 
-function processEnded(code) {
-	console.log("Process ended", code, "\n \n \n");
+
+
+
+
+
+function logger(req, res, next) {
+    console.log(req.method, "REQUEST", req.url);
+    next();
 }

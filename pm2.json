@@ -1,6 +1,6 @@
 {
 	"name": "handla",
-	"script": "server/app.js",
+	"script": "server/server.js",
 	"watch": "server",
 	"ignore_watch": ["server/config.template.js", "server/item_store"]
 }
