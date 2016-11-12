@@ -8,145 +8,158 @@ module.exports = {
 };
 
 },{}],2:[function(require,module,exports){
+var elem = document.querySelector(".connection-status");
+	
+function hideAll() {
+	Array.from(elem.children).forEach(div => {
+		div.setAttribute("hidden","");
+	});
+}
+
+function setStatus(status) {
+	hideAll();
+	elem.querySelector('.' + status).removeAttribute("hidden");
+}
+
+
+module.exports = {
+	setStatus: setStatus
+}
+
+},{}],3:[function(require,module,exports){
+var list;
+var Items = require("./items");
+var Websocket = require("./websocket");
+
+
+function init(elem) {
+	list = elem;
+	list.addEventListener("change", onListChange, false);
+	list.addEventListener("click", onListClick, false);
+}
+
+
+function refresh() {
+	console.log("Refresh list");
+	list.innerHTML = Items.getAllSorted().map(generateHTML).join("");
+}
+
+
+
+Websocket.on("allItems", items => {
+	console.log("All items from server", items);
+	Items.set(items);
+	refresh();
+});
+Websocket.on("newItem", item => {
+	console.log("New item from server:", item);
+	Items.add(item);
+	refresh();
+});
+Websocket.on("deleteItem", itemId => {
+	console.log("Delete item from server:", itemId);
+	Items.delete(itemId);
+	refresh();
+});
+
+
+
+
+function generateHTML(item) {
+	var elemId = "item_"+item._id;
+	var checked = item.checked ? "checked" : "";
+	var itemClasses = "shopping-list-item";
+	if(item.localOnly) itemClasses += " local";
+	if(item.deleted) itemClasses += " deleted";
+	return `
+		<li class="${itemClasses}" data-item-id="${item._id}">
+			<input type="checkbox" name="${item._id}" id="${elemId}" ${checked} />
+			<label for="${elemId}">&#10003;</label>
+			<span class="name">${item.name}</span>
+			<button type="button" class="button-delete-item">
+				<svg class="icon icon-delete"><use xlink:href="/icon/icons.svg#icon-delete"></use></svg>
+			</button>
+		</li>
+	`;
+}
+
+
+function onListChange(e) {
+	console.log("listChange", e);
+	/*
+	var elem = e.target;
+	var storageId = parseInt(elem.parentElement.dataset.storageId);
+
+	storage.get(config.storageName, storageId).then(function(item) {
+		item.checked = elem.checked;
+		storage.update(config.storageName, item).then(function() {
+			notifyServiceWorker();
+			refreshList();
+		});
+	});
+	*/
+}
+
+
+function onListClick(e) {
+	console.log("list click", e.target);
+
+	var elem = e.target;
+	while(elem !== list) {
+		if(elem.className === "button-delete-item") {
+			var itemId = elem.parentElement.dataset.itemId;
+			Websocket.send("deleteItem", itemId);
+			break;
+		}
+		elem = elem.parentElement;
+	}
+}
+
+
+module.exports = {
+	init: init,
+	refresh: refresh
+};
+
+
+
+
+
+
+
+/*
+
 (function(exports) {
 	var socker = require("xio-socker");
-	var list;
-	var items = [];
+	var _items = [];
 	var config = require("./config");
-	var storage;
+	
+	
 
-	function init(storageClass) {
-		storage = storageClass;
-		list = document.querySelector(".shopping-list");
-		list.addEventListener("change", onListChange, false);
-		list.addEventListener("click", onListClick, false);
+	
 
-		socker.on("allItems", allItemsCallback);
-		socker.on("newItems", newItemsCallback);
+	
+	
+
+
+	
+
+	function newItemCallback(newItem) {
+		_items.push(newItem);
 		refreshList();
 	}
 
-	function allItemsCallback(serverItems) {
-		console.log("AllItemsFromServer", serverItems);
-
-		storage.getAll("items", "_id").then(items => {
-			var existingIds = items.map(item => item._id);
-			var itemsToAdd = serverItems.filter(item => {
-				return existingIds.indexOf(item._id) === -1;
-			});
-
-			/*
-				TODO:
-				STORAGE CAN ONLY SAVE ONE ITEM AT A TIME
-				Promisify save and create an array of saves 
-				then run Promise.all(array) to save all at once
-				ONLY one db.open and get store!!
-			*/
-
-			itemsToAdd.forEach((item, i) => {
-				storage.save("items", item).then(id => {
-					if(i === itemsToAdd.length-1) refreshList();
-				});
-			});
-		});
-	}
 
 	
-	function onListChange(e) {
-		console.log("listChange", e);
-		var elem = e.target;
-		var storageId = parseInt(elem.parentElement.dataset.storageId);
-
-		storage.get(config.storageName, storageId).then(function(item) {
-			item.checked = elem.checked;
-			storage.update(config.storageName, item).then(function() {
-				notifyServiceWorker();
-				refreshList();
-			});
-		});
-	}
-
-
-	function onListClick(e) {
-		console.log("list click", e.target);
-
-		var elem = e.target;
-		while(elem !== list) {
-			if(elem.className === "button-delete-item") {
-				var storageId = parseInt(elem.parentElement.dataset.storageId);
-				deleteItem(storageId);
-			}
-			elem = elem.parentElement;
-		}
-	}
-
-	function deleteItem(storageId) {
-		var elem = list.querySelector(".shopping-list-item[data-storage-id='"+storageId+"']");
-		storage.get(config.storageName, storageId).then(function(item) {
-			if(item.localOnly) {
-				storage.delete(config.storageName, storageId).then(function(e) {
-					elem.parentElement.classList.add("delete");
-				});
-			} else {
-				item.deleted = true;
-				storage.update(config.storageName, item).then(function(e) {
-					console.log("deleted flag set", e);
-					notifyServiceWorker();
-					refreshList();
-				});
-			}
-		});
-	}
-
-
-	function newItemsCallback(newItems) {
-		newItems.forEach((newItem, i) => {
-			storage.save("items", newItem).then(item => {
-				console.log("new item saved", item);
-				if(i === newItems.length-1) refreshList();
-			});
-		});
-	}
-
-
-	function refreshList() {
-		console.log("Refresh list");
-		storage.getAll(config.storageName).then(function(items) {
-			list.innerHTML = items.sort(sortByName).map(getItemHTML).join("");
-		});
-	}
-
-
-	function getItemHTML(item) {
-		var elemId = "item_"+item._id;
-		var checked = item.checked ? "checked" : "";
-		var itemClasses = "shopping-list-item";
-		if(item.localOnly) itemClasses += " local";
-		if(item.deleted) itemClasses += " deleted";
-		return `
-			<li class="${itemClasses}" data-storage-id="${item.id}">
-				<input type="checkbox" name="${item._id}" id="${elemId}" ${checked} />
-				<label for="${elemId}">&#10003;</label>
-				<span class="name">${item.name}</span>
-				<button type="button" class="button-delete-item">
-					<svg class="icon icon-delete"><use xlink:href="/icon/icons.svg#icon-delete"></use></svg>
-				</button>
-			</li>
-		`;
-	}
 
 
 	function addItem(name) {
-		var tempId = -(+new Date());
-		var item = {name: name, _id:tempId, localOnly:true};
 		console.log("Save item:", item);
-		storage
-			.save(config.storageName, item)
-			.then(function(e) {
-				console.log("Saved to idb", item);
-				refreshList(); 
-				notifyServiceWorker();
-			});
+		if(socker.connected()) {
+			
+		} else {
+			//TODO: put message in indexedDb send queue
+		}
 	}
 
 
@@ -181,11 +194,60 @@ module.exports = {
 	exports.refresh = refreshList;
 	
 }(typeof exports === 'undefined'? this['ItemList']={}: exports));
-},{"./config":1,"xio-socker":5}],3:[function(require,module,exports){
-var socker = require("xio-socker");
+
+*/
+},{"./items":4,"./websocket":7}],4:[function(require,module,exports){
+var items = [];
+
+
+function set(arr) {
+	items = arr;
+}
+
+function addItem(item) {
+	items.push(item);
+}
+
+
+function deleteItem(id) {
+	var index = items.findIndex(i => i._id === id);
+	items.splice(index, 1);
+}
+
+
+function getAllSorted() {
+	return items.sort(sortByName);
+}
+
+
+function sortByName(a, b) {
+	let n1 = a.name.toLowerCase(),
+		n2 = b.name.toLowerCase();
+	if(n1 > n2) {
+		return 1;
+	} else if(n1 < n2) {
+		return -1;
+	}
+	return 0;
+}
+
+
+module.exports = {
+	add: addItem,
+	delete: deleteItem,
+	getAllSorted: getAllSorted,
+	set: set
+	/*
+	saveToCache: {console.error("Not implemented")},
+	loadFromCache: {console.error("Not implemented")}
+	*/
+};
+
+},{}],5:[function(require,module,exports){
 var ItemList = require("./item_list");
-var config = require("./config");
 var IDB = require("./storage");
+var Websocket = require("./websocket");
+
 
 if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('sw.js')
@@ -245,28 +307,9 @@ if ('serviceWorker' in navigator) {
 			ItemList.refresh();
 		}
 	}
-
 }
 
 
-var ConnectionStatus = (function() {
-	var elem = document.querySelector(".connection-status"),
-		
-		hideAll = function() {
-			Array.from(elem.children).forEach(div => {
-				div.setAttribute("hidden","");
-			});
-		},
-
-		setStatus = function(status) {
-			hideAll();
-			elem.querySelector('.' + status).removeAttribute("hidden");
-		};
-
-	return {
-		setStatus: setStatus
-	}
-}());
 
 
 var storage = new IDB("handla", 1, storageUpdate);
@@ -283,8 +326,12 @@ function storageUpdate(e) {
 }
 
 
-ItemList.init(storage);
-connectToWebsocket();
+
+ItemList.init(document.querySelector(".shopping-list"));
+ItemList.refresh();
+Websocket.connect();
+
+
 
 
 
@@ -298,80 +345,34 @@ btnNewItem.addEventListener("click", showAddItem, false);
 
 function addItem(e) {
 	e.preventDefault();
-	var name = newItemInput.value;
-	console.log("add", name);
-	ItemList.add(name);
+	var item = {
+		name: newItemInput.value,
+		tempId: -(+new Date()),
+		ts: new Date()
+	};
+	Websocket.send("newItem", item);
 	addItemForm.reset();
-	hide(dialogAddItem);
+	dialogAddItem.hide();
 }
 
 function showAddItem(e) {
-	show(dialogAddItem);
+	dialogAddItem.show();
 	newItemInput.focus();
 }
 
 
-window.addEventListener('online',  updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-function updateOnlineStatus(event) {
-    if(navigator.onLine) {
-    	if(socker.connected()) {
-    		console.log("online again, websocket still active");
-    		ConnectionStatus.setStatus("online");
-    	} else {
-    		console.log("online again, reconnect to websocket");
-    		connectToWebsocket();
-    	}
-    } else {
-    	console.log("offline");
-    	ConnectionStatus.setStatus("offline");
-    }
+
+
+
+Element.prototype.hide = function() {
+	this.style.display = 'none';
+}
+Element.prototype.show = function() {
+	this.style.display = '';
 }
 
 
-function connectToWebsocket() {
-	ConnectionStatus.setStatus("connecting")
-	socker.connect(config.websocket.url, config.websocket.protocol, websocketConnected, websocketClosed, websocketError);
-}
-function websocketConnected(e) {
-	console.log("connected to websocket", e);
-	ConnectionStatus.setStatus("online");
-	socker.send("getAllItems");
-}
-function websocketClosed(e) {
-	console.log("websocket closed", e);
-	ConnectionStatus.setStatus("offline");
-
-	/*
-	var countdown = 10;
-	var counter = setInterval(function() {
-		if(countdown === 0) {
-			clearInterval(counter);
-			connectToWebsocket();
-		}
-		ConnectionStatus.setStatus("connecting");
-	}, 1000);
-	*/
-
-}
-function websocketError(e) {
-	console.log("error connecting to websocket", e);
-}
-
-
-
-
-
-
-
-
-function show(elem) {
-	elem.style.display = "";
-}
-function hide(elem) {
-	elem.style.display = "none";
-}
-},{"./config":1,"./item_list":2,"./storage":4,"xio-socker":5}],4:[function(require,module,exports){
+},{"./item_list":3,"./storage":6,"./websocket":7}],6:[function(require,module,exports){
 class IDB {
 
 	constructor(name, version, upgradeCallback) {
@@ -508,7 +509,71 @@ class IDB {
 if (typeof module !== "undefined" && module.exports) {
     module.exports = IDB;
 }
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
+var socker = require("xio-socker");
+var ConnectionStatus = require("./connection_status");
+var config = require("./config");
+
+var reconnectTimeout;
+var timeoutFunction;
+
+
+
+addEventListener('online', onOnline);
+
+
+
+
+
+
+function onOnline() {
+	if(!socker.connected()) {
+		console.log("online again, reconnect to websocket");
+		connectToWebsocket();
+	}
+}
+
+function connectToWebsocket() {
+	ConnectionStatus.setStatus("connecting")
+	socker.connect(config.websocket.url, config.websocket.protocol, websocketConnected, websocketClosed, websocketError);
+}
+function websocketConnected(e) {
+	console.log("connected to websocket", e);
+	ConnectionStatus.setStatus("online");
+	clearTimeout(timeoutFunction);
+	reconnectTimeout = 1000;
+	socker.send("getAllItems");
+}
+function websocketClosed(e) {
+	console.log("websocket closed", e);
+	ConnectionStatus.setStatus("offline");
+
+	console.log("reconnect", reconnectTimeout);
+	timeoutFunction = setTimeout(function() {
+		connectToWebsocket();
+		reconnectTimeout *= 2;
+	}, reconnectTimeout);
+
+}
+function websocketError(e) {
+	console.log("error connecting to websocket", e);
+}
+
+function send(type, data) {
+	socker.send(type, data);
+}
+
+function on(type, callback) {
+	socker.on(type, callback);
+}
+
+
+module.exports = {
+	connect: connectToWebsocket,
+	send: send,
+	on: on
+}
+},{"./config":1,"./connection_status":2,"xio-socker":8}],8:[function(require,module,exports){
 var socker = (function() {
 	var socket,
 		connected = false,
@@ -601,4 +666,4 @@ var socker = (function() {
 if (typeof module !== "undefined" && module.exports) {
     module.exports = socker;
 }
-},{}]},{},[3]);
+},{}]},{},[5]);

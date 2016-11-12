@@ -8,10 +8,18 @@ router.post("/syncItems", syncItems);
 router.use(express.static('public'));
 
 
-socker.on("itemDelete", function(con, data, type) {
-	itemDB.remove(data.id).then(function(data) {
-		console.log("item removed", err);
-		socker.sendToAll("deletedItem", data.id);
+socker.on("newItem", function(con, data, type) {
+	var item = {name: data.name, added: new Date(), changed: new Date()};
+	itemDB.insert(item).then(function(newItem) {
+		console.log("item inserted", newItem);
+		socker.sendToAll("newItem", newItem);
+	});
+});
+
+socker.on("deleteItem", function(con, data, type) {
+	itemDB.remove(data).then(function(item) {
+		console.log("item removed");
+		socker.sendToAll("deleteItem", data);
 	});
 });
 

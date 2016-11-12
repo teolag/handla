@@ -1,7 +1,7 @@
-var socker = require("xio-socker");
 var ItemList = require("./item_list");
-var config = require("./config");
 var IDB = require("./storage");
+var Websocket = require("./websocket");
+
 
 if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('sw.js')
@@ -61,28 +61,9 @@ if ('serviceWorker' in navigator) {
 			ItemList.refresh();
 		}
 	}
-
 }
 
 
-var ConnectionStatus = (function() {
-	var elem = document.querySelector(".connection-status"),
-		
-		hideAll = function() {
-			Array.from(elem.children).forEach(div => {
-				div.setAttribute("hidden","");
-			});
-		},
-
-		setStatus = function(status) {
-			hideAll();
-			elem.querySelector('.' + status).removeAttribute("hidden");
-		};
-
-	return {
-		setStatus: setStatus
-	}
-}());
 
 
 var storage = new IDB("handla", 1, storageUpdate);
@@ -99,8 +80,12 @@ function storageUpdate(e) {
 }
 
 
-ItemList.init(storage);
-connectToWebsocket();
+
+ItemList.init(document.querySelector(".shopping-list"));
+ItemList.refresh();
+Websocket.connect();
+
+
 
 
 
@@ -114,76 +99,29 @@ btnNewItem.addEventListener("click", showAddItem, false);
 
 function addItem(e) {
 	e.preventDefault();
-	var name = newItemInput.value;
-	console.log("add", name);
-	ItemList.add(name);
+	var item = {
+		name: newItemInput.value,
+		tempId: -(+new Date()),
+		ts: new Date()
+	};
+	Websocket.send("newItem", item);
 	addItemForm.reset();
-	hide(dialogAddItem);
+	dialogAddItem.hide();
 }
 
 function showAddItem(e) {
-	show(dialogAddItem);
+	dialogAddItem.show();
 	newItemInput.focus();
 }
 
 
-window.addEventListener('online',  updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-function updateOnlineStatus(event) {
-    if(navigator.onLine) {
-    	if(socker.connected()) {
-    		console.log("online again, websocket still active");
-    		ConnectionStatus.setStatus("online");
-    	} else {
-    		console.log("online again, reconnect to websocket");
-    		connectToWebsocket();
-    	}
-    } else {
-    	console.log("offline");
-    	ConnectionStatus.setStatus("offline");
-    }
+
+
+
+Element.prototype.hide = function() {
+	this.style.display = 'none';
+}
+Element.prototype.show = function() {
+	this.style.display = '';
 }
 
-
-function connectToWebsocket() {
-	ConnectionStatus.setStatus("connecting")
-	socker.connect(config.websocket.url, config.websocket.protocol, websocketConnected, websocketClosed, websocketError);
-}
-function websocketConnected(e) {
-	console.log("connected to websocket", e);
-	ConnectionStatus.setStatus("online");
-	socker.send("getAllItems");
-}
-function websocketClosed(e) {
-	console.log("websocket closed", e);
-	ConnectionStatus.setStatus("offline");
-
-	/*
-	var countdown = 10;
-	var counter = setInterval(function() {
-		if(countdown === 0) {
-			clearInterval(counter);
-			connectToWebsocket();
-		}
-		ConnectionStatus.setStatus("connecting");
-	}, 1000);
-	*/
-
-}
-function websocketError(e) {
-	console.log("error connecting to websocket", e);
-}
-
-
-
-
-
-
-
-
-function show(elem) {
-	elem.style.display = "";
-}
-function hide(elem) {
-	elem.style.display = "none";
-}

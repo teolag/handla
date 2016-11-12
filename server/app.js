@@ -14,13 +14,6 @@ module.exports = app;
 
 
 
-
-
-
-
-
-
-
 function logger(req, res, next) {
     console.log(req.method, "REQUEST", req.url);
     next();

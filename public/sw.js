@@ -139,7 +139,7 @@ if (typeof module !== "undefined" && module.exports) {
 var IDB = require("./storage.js");
 var storage = new IDB("handla", 1);
 
-const cacheName = 'version_24';
+const cacheName = 'version_25';
 
 const cachedFiles = [
 	'/',
@@ -148,7 +148,8 @@ const cachedFiles = [
 	'style.css',
 	'icon/basket_256.png',
 	'icon/basket_64.png',
-	'icon/basket.svg'
+	'icon/basket.svg',
+	'icon/icons.svg'
 ];
 
 self.addEventListener('activate', e => {
