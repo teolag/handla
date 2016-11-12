@@ -199,7 +199,7 @@ self.addEventListener('fetch', e => {
 });
 
 self.addEventListener('sync', e => {
-	console.log("SW: SYNC!");
+	console.log("SW: Sync started");
 	if (e.tag == 'itemsToSync') {
 		e.waitUntil(sync());
 	}
@@ -218,8 +218,7 @@ self.addEventListener('sync', e => {
 				.map(item => item._id);
 			var data = {newItems: newItems, itemIdsToDelete: itemIdsToDelete};
 
-			console.log("SW: " + newItems.length + " new items");
-			console.log("SW: " + itemIdsToDelete.length + " items to delete");
+			console.log("SW: Send updates to server: " + newItems.length + " new items and " + itemIdsToDelete.length + " items to delete");
 
 			return fetch('/syncItems', {
 				method: 'POST',
@@ -229,7 +228,7 @@ self.addEventListener('sync', e => {
 		}
 
 		function handleServerResponse(data) {
-			console.log("SW: server response after sync", data);
+			console.log("SW: server response");
 
 			storage.getAll("items", "_id").then(items => {
 				items
@@ -240,7 +239,7 @@ self.addEventListener('sync', e => {
 					.forEach((item, i, arr) => {
 						storage.delete("items", item.id).then(function() {
 							if(i === arr.length-1) {
-								console.log("last delete complete!");
+								console.log("SW: last delete complete!");
 								notifyClientsToRefresh();
 							}
 						});

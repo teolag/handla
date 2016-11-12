@@ -148,7 +148,7 @@
 				return registration.sync.register('itemsToSync')})
 			.then(function() {
 				console.log("synk scheduled...");
-			}.catch(function(e) {
+			}).catch(function(e) {
 				console.log("no sync!", e);
 			});
 	}

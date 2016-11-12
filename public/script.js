@@ -154,9 +154,12 @@ module.exports = {
 		console.log("wanna synk");
 		navigator.serviceWorker.ready
 			.then(function(registration) {
+				console.log("ready to sync");
 				return registration.sync.register('itemsToSync')})
 			.then(function() {
 				console.log("synk scheduled...");
+			}).catch(function(e) {
+				console.log("no sync!", e);
 			});
 	}
 
