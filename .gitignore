@@ -5,3 +5,5 @@ server/cert.pem
 server/key.pem
 server/item_store
 client/js/config.js
+public/script.js
+public/sw.js
