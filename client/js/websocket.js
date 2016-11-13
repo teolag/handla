@@ -2,12 +2,13 @@ var socker = require("xio-socker");
 var ConnectionStatus = require("./connection_status");
 var config = require("./config");
 
-var reconnectTimeout;
+var reconnectTimeout = 1000;
 var timeoutFunction;
 
 
 
 addEventListener('online', onOnline);
+document.addEventListener("visibilitychange", onPageFocusAndBlur);
 
 
 
@@ -15,8 +16,15 @@ addEventListener('online', onOnline);
 
 
 function onOnline() {
-	if(!socker.connected()) {
+	if(!socker.isConnected()) {
 		console.log("online again, reconnect to websocket");
+		connectToWebsocket();
+	}
+}
+
+
+function onPageFocusAndBlur() {
+	if(!document.hidden && !socker.isConnected()) {
 		connectToWebsocket();
 	}
 }
@@ -33,10 +41,10 @@ function websocketConnected(e) {
 	socker.send("getAllItems");
 }
 function websocketClosed(e) {
-	console.log("websocket closed", e);
+	console.log("Websocket closed", e.code, e.reason);
 	ConnectionStatus.setStatus("offline");
 
-	console.log("reconnect", reconnectTimeout);
+	console.log("Try to reconnect in " + (reconnectTimeout/1000) + " seconds");
 	timeoutFunction = setTimeout(function() {
 		connectToWebsocket();
 		reconnectTimeout *= 2;
@@ -44,7 +52,7 @@ function websocketClosed(e) {
 
 }
 function websocketError(e) {
-	console.log("error connecting to websocket", e);
+	//console.log("Error connecting to websocket", e);
 }
 
 function send(type, data) {

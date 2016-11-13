@@ -32,6 +32,14 @@ Websocket.on("deleteItem", itemId => {
 	Items.delete(itemId);
 	refresh();
 });
+Websocket.on("itemChecked", itemId => {
+	Items.check(itemId);
+	refresh();
+});
+Websocket.on("itemUnchecked", itemId => {
+	Items.uncheck(itemId);
+	refresh();
+});
 
 
 
@@ -56,24 +64,16 @@ function generateHTML(item) {
 
 
 function onListChange(e) {
-	console.log("listChange", e);
-	/*
+	//console.log("listChange", e);
 	var elem = e.target;
-	var storageId = parseInt(elem.parentElement.dataset.storageId);
-
-	storage.get(config.storageName, storageId).then(function(item) {
-		item.checked = elem.checked;
-		storage.update(config.storageName, item).then(function() {
-			notifyServiceWorker();
-			refreshList();
-		});
-	});
-	*/
+	var itemId = elem.parentElement.dataset.itemId;
+			
+	Websocket.send(elem.checked ? "checkItem" : "uncheckItem", itemId);
 }
 
 
 function onListClick(e) {
-	console.log("list click", e.target);
+	//console.log("list click", e.target);
 
 	var elem = e.target;
 	while(elem !== list) {

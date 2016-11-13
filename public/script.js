@@ -61,6 +61,14 @@ Websocket.on("deleteItem", itemId => {
 	Items.delete(itemId);
 	refresh();
 });
+Websocket.on("itemChecked", itemId => {
+	Items.check(itemId);
+	refresh();
+});
+Websocket.on("itemUnchecked", itemId => {
+	Items.uncheck(itemId);
+	refresh();
+});
 
 
 
@@ -85,24 +93,16 @@ function generateHTML(item) {
 
 
 function onListChange(e) {
-	console.log("listChange", e);
-	/*
+	//console.log("listChange", e);
 	var elem = e.target;
-	var storageId = parseInt(elem.parentElement.dataset.storageId);
-
-	storage.get(config.storageName, storageId).then(function(item) {
-		item.checked = elem.checked;
-		storage.update(config.storageName, item).then(function() {
-			notifyServiceWorker();
-			refreshList();
-		});
-	});
-	*/
+	var itemId = elem.parentElement.dataset.itemId;
+			
+	Websocket.send(elem.checked ? "checkItem" : "uncheckItem", itemId);
 }
 
 
 function onListClick(e) {
-	console.log("list click", e.target);
+	//console.log("list click", e.target);
 
 	var elem = e.target;
 	while(elem !== list) {
@@ -214,6 +214,16 @@ function deleteItem(id) {
 	items.splice(index, 1);
 }
 
+function checkItem(id) {
+	var item = items.find(i => i._id === id);
+	item.checked = true;
+}
+
+function uncheckItem(id) {
+	var item = items.find(i => i._id === id);
+	item.checked = false;
+}
+
 
 function getAllSorted() {
 	return items.sort(sortByName);
@@ -236,7 +246,9 @@ module.exports = {
 	add: addItem,
 	delete: deleteItem,
 	getAllSorted: getAllSorted,
-	set: set
+	set: set,
+	check: checkItem,
+	uncheck: uncheckItem
 	/*
 	saveToCache: {console.error("Not implemented")},
 	loadFromCache: {console.error("Not implemented")}
@@ -514,12 +526,13 @@ var socker = require("xio-socker");
 var ConnectionStatus = require("./connection_status");
 var config = require("./config");
 
-var reconnectTimeout;
+var reconnectTimeout = 1000;
 var timeoutFunction;
 
 
 
 addEventListener('online', onOnline);
+document.addEventListener("visibilitychange", onPageFocusAndBlur);
 
 
 
@@ -527,8 +540,15 @@ addEventListener('online', onOnline);
 
 
 function onOnline() {
-	if(!socker.connected()) {
+	if(!socker.isConnected()) {
 		console.log("online again, reconnect to websocket");
+		connectToWebsocket();
+	}
+}
+
+
+function onPageFocusAndBlur() {
+	if(!document.hidden && !socker.isConnected()) {
 		connectToWebsocket();
 	}
 }
@@ -545,10 +565,10 @@ function websocketConnected(e) {
 	socker.send("getAllItems");
 }
 function websocketClosed(e) {
-	console.log("websocket closed", e);
+	console.log("Websocket closed", e.code, e.reason);
 	ConnectionStatus.setStatus("offline");
 
-	console.log("reconnect", reconnectTimeout);
+	console.log("Try to reconnect in " + (reconnectTimeout/1000) + " seconds");
 	timeoutFunction = setTimeout(function() {
 		connectToWebsocket();
 		reconnectTimeout *= 2;
@@ -556,7 +576,7 @@ function websocketClosed(e) {
 
 }
 function websocketError(e) {
-	console.log("error connecting to websocket", e);
+	//console.log("Error connecting to websocket", e);
 }
 
 function send(type, data) {
@@ -577,9 +597,7 @@ module.exports = {
 var socker = (function() {
 	var socket,
 		connected = false,
-		messageListeners = {},
-		sendQueue = [];
-
+		messageListeners = {};
 
 	function connect(url, protocol, openCallback, closeCallback, errorCallback) {
 		socket = new WebSocket(url, protocol);
@@ -589,7 +607,6 @@ var socker = (function() {
 		socket.addEventListener("message", messageReceived);
 
 		function connectionEstablished(e) {
-			processSendQueue();
 			if(openCallback) openCallback(e);
 			else console.log("connectionEstablished", e);
 		}
@@ -635,14 +652,7 @@ var socker = (function() {
 			console.log("Send", payload);
 			socket.send(JSON.stringify(payload));
 		} else {
-			sendQueue.push(payload);
-		}
-	}
-
-	function processSendQueue() {
-		while(isConnected() && sendQueue.length>0) {
-			var payload = sendQueue.shift();
-			socket.send(JSON.stringify(payload));
+			throw new Error("No websocket connection");
 		}
 	}
 
@@ -659,8 +669,8 @@ var socker = (function() {
 		connect: connect,
 		send: sendMessage,
 		on: addMessageListener,
-		connected: isConnected
-	}	
+		isConnected: isConnected
+	}
 }());
 
 if (typeof module !== "undefined" && module.exports) {

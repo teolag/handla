@@ -23,10 +23,17 @@ socker.on("deleteItem", function(con, data, type) {
 	});
 });
 
-socker.on("itemChecked", function(con, data, type) {
-	itemDB.update(data.id, {checked:data.checked}).then(function(e) {
-		console.log("item " + (data.checked? "checked": "unchecked"), e);
-		socker.sendToAll("checkedItem", data);
+socker.on("checkItem", function(con, data, type) {
+	itemDB.update(data, {checked:true}).then(function(e) {
+		console.log("item checked", data);
+		socker.sendToAll("itemChecked", data);
+	});
+});
+
+socker.on("uncheckItem", function(con, data, type) {
+	itemDB.update(data, {checked:false}).then(function(e) {
+		console.log("item unchecked", data);
+		socker.sendToAll("itemUnchecked", data);
 	});
 });
 

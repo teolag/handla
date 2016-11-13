@@ -15,6 +15,16 @@ function deleteItem(id) {
 	items.splice(index, 1);
 }
 
+function checkItem(id) {
+	var item = items.find(i => i._id === id);
+	item.checked = true;
+}
+
+function uncheckItem(id) {
+	var item = items.find(i => i._id === id);
+	item.checked = false;
+}
+
 
 function getAllSorted() {
 	return items.sort(sortByName);
@@ -37,7 +47,9 @@ module.exports = {
 	add: addItem,
 	delete: deleteItem,
 	getAllSorted: getAllSorted,
-	set: set
+	set: set,
+	check: checkItem,
+	uncheck: uncheckItem
 	/*
 	saveToCache: {console.error("Not implemented")},
 	loadFromCache: {console.error("Not implemented")}
