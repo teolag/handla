@@ -5,7 +5,6 @@ var Websocket = require("./websocket");
 
 function init(elem) {
 	list = elem;
-	list.addEventListener("change", onListChange, false);
 	list.addEventListener("click", onListClick, false);
 }
 
@@ -46,14 +45,15 @@ Websocket.on("itemUnchecked", itemId => {
 
 function generateHTML(item) {
 	var elemId = "item_"+item._id;
-	var checked = item.checked ? "checked" : "";
 	var itemClasses = "shopping-list-item";
 	if(item.localOnly) itemClasses += " local";
 	if(item.deleted) itemClasses += " deleted";
+	if(item.checked) itemClasses += " checked";
 	return `
 		<li class="${itemClasses}" data-item-id="${item._id}">
-			<input type="checkbox" name="${item._id}" id="${elemId}" ${checked} />
-			<label for="${elemId}">&#10003;</label>
+			<button type="button" class="button-check-item">
+				<svg class="icon icon-check"><use xlink:href="/icon/icons.svg#icon-check"></use></svg>
+			</button>
 			<span class="name">${item.name}</span>
 			<button type="button" class="button-delete-item">
 				<svg class="icon icon-delete"><use xlink:href="/icon/icons.svg#icon-delete"></use></svg>
@@ -62,14 +62,6 @@ function generateHTML(item) {
 	`;
 }
 
-
-function onListChange(e) {
-	//console.log("listChange", e);
-	var elem = e.target;
-	var itemId = elem.parentElement.dataset.itemId;
-			
-	Websocket.send(elem.checked ? "checkItem" : "uncheckItem", itemId);
-}
 
 
 function onListClick(e) {
@@ -82,6 +74,15 @@ function onListClick(e) {
 			Websocket.send("deleteItem", itemId);
 			break;
 		}
+
+		if(elem.className === "button-check-item") {
+			var li = elem.parentElement;
+			var itemId = li.dataset.itemId;
+			var checked = li.classList.contains("checked");
+			Websocket.send(!checked ? "checkItem" : "uncheckItem", itemId);
+			break;
+		}
+
 		elem = elem.parentElement;
 	}
 }
