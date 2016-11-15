@@ -3,26 +3,40 @@ var items = [];
 
 function set(arr) {
 	items = arr;
+	saveToCache();
 }
 
 function addItem(item) {
 	items.push(item);
+	saveToCache();
 }
 
 
 function deleteItem(id) {
 	var index = items.findIndex(i => i._id === id);
 	items.splice(index, 1);
+	saveToCache();
 }
 
 function checkItem(id) {
 	var item = items.find(i => i._id === id);
 	item.checked = true;
+	saveToCache();
 }
 
 function uncheckItem(id) {
 	var item = items.find(i => i._id === id);
 	item.checked = false;
+	saveToCache();
+}
+
+function saveToCache() {
+	 localStorage.setItem('items', JSON.stringify(items));
+}
+
+function loadFromCache() {
+	var cache = JSON.parse(localStorage.getItem('items'));
+	if(cache) items = cache;
 }
 
 
@@ -49,9 +63,7 @@ module.exports = {
 	getAllSorted: getAllSorted,
 	set: set,
 	check: checkItem,
-	uncheck: uncheckItem
-	/*
-	saveToCache: {console.error("Not implemented")},
-	loadFromCache: {console.error("Not implemented")}
-	*/
+	uncheck: uncheckItem,
+	saveToCache: saveToCache,
+	loadFromCache: loadFromCache
 };

@@ -6,6 +6,7 @@ var Websocket = require("./websocket");
 function init(elem) {
 	list = elem;
 	list.addEventListener("click", onListClick, false);
+	Items.loadFromCache();
 }
 
 
