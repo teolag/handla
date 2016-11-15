@@ -33,11 +33,13 @@ Websocket.on("deleteItem", itemId => {
 });
 Websocket.on("itemChecked", itemId => {
 	Items.check(itemId);
-	refresh();
+	check(itemId);
+	//refresh();
 });
 Websocket.on("itemUnchecked", itemId => {
 	Items.uncheck(itemId);
-	refresh();
+	uncheck(itemId);
+	//refresh();
 });
 
 
@@ -85,6 +87,15 @@ function onListClick(e) {
 
 		elem = elem.parentElement;
 	}
+}
+
+function check(id) {
+	var li = list.querySelector("li[data-item-id='"+id+"']");
+	li.classList.add("checked");
+}
+function uncheck(id) {
+	var li = list.querySelector("li[data-item-id='"+id+"']");
+	li.classList.remove("checked");
 }
 
 

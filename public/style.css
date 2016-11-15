@@ -14,15 +14,31 @@ button, input, select, textarea {
 header {
 	background-color: white;
 	display: flex;
-	padding: 0.5em;
+	padding: 0.5em 1em;
 	justify-content: space-between;
 	align-items: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	box-sizing: border-box;
+	box-shadow: 0 0.3em 0.7em rgba(0,0,0,0.2);
 }
 
 h1 {
 	margin: 0;
+	display: flex;
+	align-items: center;
+	color: #417c8e;
+	cursor: pointer;
 }
 
+h1 .icon-cart {
+	height: 1.7rem;
+	width: 1.7rem;
+	fill: #417c8e;
+	margin-right: 0.2em;
+}
 
 
 
@@ -40,13 +56,14 @@ h1 {
 
 .shopping-list-area {
 	overflow: auto;
-	margin: 0 auto;
+	margin: 3rem auto 5rem auto;
 	max-width: 40em;
 }
 
 .shopping-list {
 	padding: 0;
 	font-size: 1.2rem;
+	margin: 1em 0 1em 1em;
 }
 
 
@@ -72,7 +89,7 @@ h1 {
 	border: 0;
 	background-color: #eee;
 	display: flex;
-	padding: 0.2em;
+	padding: 0.2rem;
 	fill: #859ca2;
 	border-radius: 50%;
 	margin-right: 0.6em;
@@ -81,6 +98,16 @@ h1 {
 
 .button-check-item:hover {
 	background-color: #ddd;
+}
+
+.button-check-item:focus {
+	outline: none;
+}
+
+.button-check-item .icon-check {
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0.25rem;
 }
 
 .checked .button-check-item {
@@ -117,12 +144,13 @@ h1 {
 	position: fixed;
 	bottom: 1em;
 	right: 1em;
-	background-color: #ca35b0;
+	background-color: #cc6498;
 	border: 0;
 	cursor: pointer;
 	padding: 1em;
 	display: flex;
 	fill: #f7e0f3;
+	box-shadow: 0 0.3em 0.7em rgba(0,0,0,0.2);
 }
 
 .button-new-item:hover {
