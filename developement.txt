@@ -35,6 +35,24 @@ Notify Service Worker to send new items
 
 
 
+Add new item 2.0
+-----------------------------
+Enter name
+Create temp Id
+Save name, tempId, createDate, modifiedDate in ItemArray
+If websocket
+	send item to server
+else
+	save websocket message to send list
+
+
+
+
+
+
+
+
+
 Service Worker executes sync
 -----------------------------
 Send lists of all:

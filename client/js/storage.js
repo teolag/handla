@@ -25,13 +25,12 @@ class IDB {
 		});
 	}
 
-	save(storeName, data) {
+	insert(storeName, data) {
 		return this.open().then(function(db) {
 			return new Promise(function(resolve, reject) {
 
-				var transaction = db.transaction([storeName],"readwrite");
-				var store = transaction.objectStore(storeName);
-
+				var store = getObjectStore(db, storeName, 'readwrite');
+		    	
 				var request = store.add(data);
 
 				request.onerror = function(e) {
@@ -49,9 +48,9 @@ class IDB {
 		return this.open().then(function(db) {
 			return new Promise(function(resolve, reject) {
 				var items = [];
-				var transaction = db.transaction(storeName, "readonly");
+				var transaction = db.transaction(storeName, 'readonly');
 				var store = transaction.objectStore(storeName);
-
+		    	
 				if(index) {
 					let storeIndex = store.index(index);
 					var cursorRequest = storeIndex.openCursor();
@@ -82,9 +81,8 @@ class IDB {
 	get(storeName, id) {
 		return this.open().then(function(db) {
 			return new Promise(function(resolve, reject) {
-				var transaction = db.transaction(storeName, "readonly");
-				var store = transaction.objectStore(storeName);
-
+				var store = getObjectStore(db, storeName, 'readonly');
+		    	
 				var request = store.get(id);
 				request.onsuccess = function(e) {
 					resolve(e.target.result);
@@ -99,9 +97,8 @@ class IDB {
 	delete(storeName, id) {
 		return this.open().then(function(db) {
 			return new Promise(function(resolve, reject) {
-				var transaction = db.transaction(storeName, "readwrite");
-				var store = transaction.objectStore(storeName);
-
+				var store = getObjectStore(db, storeName, 'readwrite');
+		    	
 				var request = store.delete(id);
 				request.onsuccess = function(e) {
 					resolve(e);
@@ -116,9 +113,8 @@ class IDB {
 	update(storeName, data) {
 		return this.open().then(function(db) {
 			return new Promise(function(resolve, reject) {
-				var transaction = db.transaction(storeName, "readwrite");
-				var store = transaction.objectStore(storeName);
-
+				var store = getObjectStore(db, storeName, 'readwrite');
+		    	
 				var request = store.put(data);
 				request.onsuccess = function(e) {
 					resolve(e);
@@ -129,8 +125,30 @@ class IDB {
 			});
 		});
 	}
+
+	clear(storeName) {
+		return this.open().then(function(db) {
+			return new Promise(function(resolve, reject) {
+				var store = getObjectStore(db, storeName, 'readwrite');
+		    	var request = store.clear();
+				request.onsuccess = function(e) {
+					resolve();
+				};
+				request.onerror = function(e) {
+					reject(e);
+				};
+			});
+		});
+	}
 }
 
 if (typeof module !== "undefined" && module.exports) {
     module.exports = IDB;
+}
+
+
+
+function getObjectStore(db, storeName, mode) {
+	var transaction = db.transaction(storeName, mode);
+	return transaction.objectStore(storeName);
 }

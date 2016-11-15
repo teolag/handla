@@ -1,26 +1,42 @@
 var list;
 var Items = require("./items");
 var Websocket = require("./websocket");
+var offlineChanges = require("./offline_changes");
+
 
 
 function init(elem) {
 	list = elem;
 	list.addEventListener("click", onListClick, false);
 	Items.loadFromCache();
+	refresh();
 }
 
 
 function refresh() {
 	console.log("Refresh list");
-	list.innerHTML = Items.getAllSorted().map(generateHTML).join("");
+	var items = Items.getAllSorted();
+	if(items.length === 0) {
+		list.innerHTML = "<li>Tomt!</li>";
+	} else {
+		list.innerHTML = items.map(generateHTML).join("");
+	}
 }
 
 
 
 Websocket.on("allItems", items => {
 	console.log("All items from server", items);
-	Items.set(items);
-	refresh();
+
+	offlineChanges.hasChanges().then(hasChanges => {
+		if(hasChanges) {
+			console.log("do not update items until sync is complete");
+		} else {
+			console.log("no offline changes, load items");
+			Items.set(items);
+			refresh();
+		}
+	});
 });
 Websocket.on("newItem", item => {
 	console.log("New item from server:", item);

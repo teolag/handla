@@ -1,5 +1,6 @@
 var IDB = require("./storage.js");
 var storage = new IDB("handla", 1);
+const STORE_NAME = "offlineMessages";
 
 const cacheName = 'version_25';
 
@@ -63,36 +64,36 @@ self.addEventListener('fetch', e => {
 
 self.addEventListener('sync', e => {
 	console.log("SW: Sync started");
-	if (e.tag == 'itemsToSync') {
+	if (e.tag == 'offlineChanges') {
 		e.waitUntil(sync());
 	}
 
 	function sync() {
-		return storage.getAll("items")
-			.then(items => postItemsToSync(items))
+		return storage.getAll(STORE_NAME)
+			.then(messages => postMessagesToSync(messages))
 			.then(response => response.json())
 			.then(json => handleServerResponse(json))
-			.catch(err => console.log("SW: Error syncing", err));
+			.catch(err => console.error("SW: Error syncing", err));
 
-		function postItemsToSync(items) {
-			var newItems = items.filter(item => item.localOnly && !item.deleted);
-			var itemIdsToDelete = items
-				.filter(item => !item.localOnly && item.deleted)
-				.map(item => item._id);
-			var data = {newItems: newItems, itemIdsToDelete: itemIdsToDelete};
+		function postMessagesToSync(messages) {
 
-			console.log("SW: Send updates to server: " + newItems.length + " new items and " + itemIdsToDelete.length + " items to delete");
+			console.log("SW: All messages to send", messages);
 
 			return fetch('/syncItems', {
 				method: 'POST',
-				body: JSON.stringify(data),
+				body: JSON.stringify(messages),
 				headers: new Headers({"Content-Type": "application/json"})
+			}).catch(e => {
+				throw new Error("Failed to post offline messages");
 			});
 		}
 
 		function handleServerResponse(data) {
-			console.log("SW: server response");
+			console.log("SW: server response", data);
 
+			console.log("All synced!  Clear all messages in idb");
+			storage.clear(STORE_NAME);
+			/*
 			storage.getAll("items", "_id").then(items => {
 				items
 					.filter(item => {
@@ -109,6 +110,7 @@ self.addEventListener('sync', e => {
 					}
 				);
 			});
+			*/
 		}
 
 		function notifyClientsToRefresh() {

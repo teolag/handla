@@ -57,6 +57,7 @@ module.exports = router;
 function syncItems(req, res) {
 	console.log("synca items", req.body);
 
+	/*
 	var newItems = req.body.newItems.map(function(item) {
 		return {
 			name: item.name,
@@ -83,4 +84,6 @@ function syncItems(req, res) {
 		console.log("Both completed", returns);
 		res.json({savedTempIds: savedTempIds, deletedIds: itemIdsToDelete});
 	});
+	*/
+	res.send("Hej hej, nu har jag syncat... typ");
 }

@@ -1,6 +1,7 @@
 var socker = require("xio-socker");
 var ConnectionStatus = require("./connection_status");
 var config = require("./config");
+var offlineChanges = require("./offline_changes");
 
 var reconnectTimeout = 1000;
 var timeoutFunction;
@@ -56,7 +57,12 @@ function websocketError(e) {
 }
 
 function send(type, data) {
-	socker.send(type, data);
+	try {
+		socker.send(type, data);
+	} catch(e) {
+		console.log("Save offline message");
+		offlineChanges.saveMessage(type, data);
+	}
 }
 
 function on(type, callback) {

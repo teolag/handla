@@ -82,7 +82,6 @@ function storageUpdate(e) {
 
 
 ItemList.init(document.querySelector(".shopping-list"));
-ItemList.refresh();
 Websocket.connect();
 
 
