@@ -44,6 +44,10 @@ function getAllSorted() {
 	return items.sort(sortByName);
 }
 
+function getSortedPosition(id) {
+	return getAllSorted().findIndex(i => i._id === id);
+}
+
 
 function sortByName(a, b) {
 	let n1 = a.name.toLowerCase(),
@@ -61,6 +65,7 @@ module.exports = {
 	add: addItem,
 	delete: deleteItem,
 	getAllSorted: getAllSorted,
+	getSortedPosition: getSortedPosition,
 	set: set,
 	check: checkItem,
 	uncheck: uncheckItem,

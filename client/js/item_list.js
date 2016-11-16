@@ -41,7 +41,14 @@ Websocket.on("allItems", items => {
 Websocket.on("newItem", item => {
 	console.log("New item from server:", item);
 	Items.add(item);
-	refresh();
+	var sortedIndex = Items.getSortedPosition(item._id);
+	var li = generateHTML(item);
+	if(sortedIndex === 0) {
+		list.insertAdjacentHTML('afterbegin', li);
+	} else {
+		let previousLi = list.children.item(sortedIndex-1);
+		previousLi.insertAdjacentHTML('afterend', li)
+	}
 });
 Websocket.on("deleteItem", itemId => {
 	console.log("Delete item from server:", itemId);
