@@ -53,7 +53,8 @@ Websocket.on("newItem", item => {
 Websocket.on("deleteItem", itemId => {
 	console.log("Delete item from server:", itemId);
 	Items.delete(itemId);
-	refresh();
+	remove(itemId);
+	//refresh();
 });
 Websocket.on("itemChecked", itemId => {
 	Items.check(itemId);
@@ -120,6 +121,10 @@ function check(id) {
 function uncheck(id) {
 	var li = list.querySelector("li[data-item-id='"+id+"']");
 	li.classList.remove("checked");
+}
+function remove(id) {
+	var li = list.querySelector("li[data-item-id='"+id+"']");
+	list.removeChild(li);
 }
 
 
