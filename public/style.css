@@ -57,11 +57,13 @@ h1 .icon-cart {
 .shopping-list-area {
 	margin: 5rem auto 5rem auto;
 	max-width: 40em;
+
 }
 
 .shopping-list {
 	padding: 0;
 	margin: 1em 0 1em 1em;
+	overflow: hidden;
 }
 
 
