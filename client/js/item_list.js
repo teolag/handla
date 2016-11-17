@@ -41,14 +41,7 @@ Websocket.on("allItems", items => {
 Websocket.on("newItem", item => {
 	console.log("New item from server:", item);
 	Items.add(item);
-	var sortedIndex = Items.getSortedPosition(item._id);
-	var li = generateHTML(item);
-	if(sortedIndex === 0) {
-		list.insertAdjacentHTML('afterbegin', li);
-	} else {
-		let previousLi = list.children.item(sortedIndex-1);
-		previousLi.insertAdjacentHTML('afterend', li)
-	}
+	insert(item);
 });
 Websocket.on("deleteItem", itemId => {
 	console.log("Delete item from server:", itemId);
@@ -124,7 +117,23 @@ function uncheck(id) {
 }
 function remove(id) {
 	var li = list.querySelector("li[data-item-id='"+id+"']");
-	list.removeChild(li);
+	li.classList.add("delete");
+
+	//list.removeChild(li);
+}
+
+function insert(item) {
+	var sortedIndex = Items.getSortedPosition(item._id);
+	var li = generateHTML(item);
+	if(sortedIndex === 0) {
+		list.insertAdjacentHTML('afterbegin', li);
+	} else {
+		let previousLi = list.children.item(sortedIndex-1);
+		previousLi.insertAdjacentHTML('afterend', li);
+	}
+	var elem = list.children.item(sortedIndex);
+	elem.classList.add("newborn");
+	setTimeout(() => elem.classList.remove("newborn"), 40);
 }
 
 

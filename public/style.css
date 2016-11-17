@@ -75,6 +75,14 @@ h1 .icon-cart {
 	align-items: center;
 	border-radius: 3rem 0 0 3rem;
 	font-size: 1.2em;
+	height: 2.3rem;
+	opacity: 1;
+
+	transition: opacity 0.5s ease-out 0.3s,
+				transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+				height 0.2s ease-out,
+				margin 0.2s ease-out,
+				padding 0.2s ease-out;
 }
 
 
@@ -83,6 +91,26 @@ h1 .icon-cart {
 	color: #8fa3a7;
 }
 
+.shopping-list-item.delete {
+	transition: transform 0.3s ease-in,
+				opacity 0.3s linear,
+				height 0.5s ease-out 0.4s,
+				margin 0.5s ease-out 0.4s,
+				padding 0.5s ease-out 0.4s;
+	transform: translate(10em, 0);
+	height: 0;
+	padding: 0;
+	margin: 0;
+	opacity: 0;
+}
+
+.shopping-list-item.newborn {
+	height: 0;
+	padding: 0;
+	margin: 0;
+	opacity: 0;
+	transform: translate(-10em, 0);
+}
 
 .button-check-item {
 	border: 0;
