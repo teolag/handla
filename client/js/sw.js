@@ -2,7 +2,7 @@ var IDB = require("./storage.js");
 var storage = new IDB("handla", 1);
 const STORE_NAME = "offlineMessages";
 
-const cacheName = 'version_25';
+const cacheName = 'version_26';
 
 const cachedFiles = [
 	'/',
