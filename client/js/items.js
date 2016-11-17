@@ -48,6 +48,13 @@ function getSortedPosition(id) {
 	return getAllSorted().findIndex(i => i._id === id);
 }
 
+function getCheckedCount() {
+	return items.filter(i => i.checked).length;
+}
+function getTotalCount() {
+	return items.length;
+}
+
 
 function sortByName(a, b) {
 	let n1 = a.name.toLowerCase(),
@@ -70,5 +77,7 @@ module.exports = {
 	check: checkItem,
 	uncheck: uncheckItem,
 	saveToCache: saveToCache,
-	loadFromCache: loadFromCache
+	loadFromCache: loadFromCache,
+	getCheckedCount: getCheckedCount,
+	getTotalCount: getTotalCount
 };

@@ -2,7 +2,7 @@ var list;
 var Items = require("./items");
 var Websocket = require("./websocket");
 var offlineChanges = require("./offline_changes");
-
+var listStats = require("./list_stats");
 
 
 function init(elem) {
@@ -34,6 +34,7 @@ Websocket.on("allItems", items => {
 		} else {
 			console.log("no offline changes, load items");
 			Items.set(items);
+			listStats.update();
 			refresh();
 		}
 	});
@@ -42,22 +43,23 @@ Websocket.on("newItem", item => {
 	console.log("New item from server:", item);
 	Items.add(item);
 	insert(item);
+	listStats.update();
 });
 Websocket.on("deleteItem", itemId => {
 	console.log("Delete item from server:", itemId);
 	Items.delete(itemId);
 	remove(itemId);
-	//refresh();
+	listStats.update();
 });
 Websocket.on("itemChecked", itemId => {
 	Items.check(itemId);
 	check(itemId);
-	//refresh();
+	listStats.update();
 });
 Websocket.on("itemUnchecked", itemId => {
 	Items.uncheck(itemId);
 	uncheck(itemId);
-	//refresh();
+	listStats.update();
 });
 
 
